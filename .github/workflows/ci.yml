@@ -19,30 +19,14 @@ jobs:
         node-version: '18'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
 
     - name: Debug environment
       run: |
-        echo "Listing files:"
+        echo "List repository files:"
         ls -la
-        echo "Checking npm scripts:"
+        echo "Available npm scripts:"
         npm run
 
     - name: Run tests
       run: npm test
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v20
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
