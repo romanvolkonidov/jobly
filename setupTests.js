@@ -1,12 +1,7 @@
-import { configure } from '@testing-library/react';
-import '@testing-library/jest-dom';
+// setupTests.js
 
-configure({ testIdAttribute: 'data-testid' });
+// Configure Testing Library (optional)
+import '@testing-library/jest-dom'; // Add custom matchers for assertions like toBeInTheDocument
 
-beforeAll(() => {
-  // Set up global mocks, stubs, or spies
-});
-
-afterAll(() => {  
-  // Clean up global mocks, stubs, or spies
-});
+// Set up global mocks or configurations
+jest.setTimeout(30000); // Example: Increase test timeout globally
