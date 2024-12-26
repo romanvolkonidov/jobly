@@ -11,9 +11,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
     "next": "15.1.2",
+    "next-auth": "^4.24.11",
+    "prisma": "^6.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.22.10",
@@ -21,7 +27,9 @@
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.26.0",
     "@eslint/eslintrc": "^3",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.6",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -40,5 +48,4 @@
   "keywords": [],
   "author": "",
   "license": "ISC"
-
 }
