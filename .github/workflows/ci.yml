@@ -18,10 +18,10 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Debug: Check Current Directory
+      - name: Debug: Print Current Directory
         run: pwd
 
-      - name: Debug: List Files in Current Directory
+      - name: Debug: List All Files
         run: ls -la
 
       - name: Debug: Output package.json
@@ -33,5 +33,5 @@ jobs:
       - name: Debug: Show Available npm Scripts
         run: npm run
 
-      - name: Run Tests
-        run: npm test
+      - name: Run Jest Tests
+        run: npx jest
