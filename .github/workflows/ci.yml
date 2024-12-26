@@ -18,22 +18,22 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Debug repository files
+    - name: Debug: List files
       run: ls -la
 
-    - name: Output package.json
+    - name: Debug: Output package.json
       run: cat package.json
 
-    - name: Show available npm scripts
-      run: npm run
-
-    - name: Check Node.js and NPM versions
+    - name: Debug: Check Node.js and NPM versions
       run: |
         node --version
         npm --version
 
     - name: Install dependencies
       run: npm ci
+
+    - name: Debug: Show available npm scripts
+      run: npm run
 
     - name: Run tests
       run: npm test
