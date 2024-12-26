@@ -6,8 +6,6 @@ const jestConfig = {
   extensionsToTreatAsEsm: [".ts", ".tsx", ".js", ".jsx"], // Treat these extensions as ES modules
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy", // Mock CSS modules
-  },
-  setupFilesAfterEnv: ["<rootDir>/setupTests.js"], // Point to setupTests.js for test setup
-};
+  }};
 
 export default jestConfig;
