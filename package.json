@@ -40,21 +40,18 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "jest": {
-    "transform": {
-      "^.+\\.[tj]sx?$": "babel-jest"
-    },
-    "testEnvironment": "jsdom",
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
-    }
+"jest": {
+  "transform": {
+    "^.+\\.[tj]sx?$": "babel-jest"
   },
+  "testEnvironment": "jsdom",
+  "extensionsToTreatAsEsm": [".ts", ".tsx", ".js", ".jsx"],
+  "moduleNameMapper": {
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+  },
+  "setupFilesAfterEnv": ["<rootDir>/setupTests.js"]
+}
+,
   "directories": {
     "test": "test"
   }
