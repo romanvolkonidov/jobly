@@ -1,7 +1,11 @@
-name: CI Test
+name: CI/CD
 
 on:
   push:
+    branches:
+      - main
+      - master
+  pull_request:
     branches:
       - main
       - master
@@ -12,5 +16,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Print Hello World
-        run: echo "Hello, World!"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Debug: Check Working Directory
+        run: pwd
+
+      - name: Debug: List Repository Files
+        run: ls -la
+
+      - name: Debug: Output package.json
+        run: cat package.json
+
+      - name: Debug: Check Node.js and NPM versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Debug: Show Available npm Scripts
+        run: npm run
+
+      - name: Run Jest Tests
+        run: npx jest
