@@ -1,0 +1,9 @@
+{
+  "name": "marketplace-task-processor",
+  "version": "1.0.0",
+  "main": "src/processor.js",
+  "scripts": {
+    "start": "node src/processor.js",
+    "dev": "nodemon src/processor.js"
+  }
+}
