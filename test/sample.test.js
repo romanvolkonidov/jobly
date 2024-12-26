@@ -1,3 +1,3 @@
-test("dummy test", () => {
-  expect(true).toBe(true); // Simple test to ensure Jest runs
+test('sample test', () => {
+  expect(true).toBe(true);
 });
