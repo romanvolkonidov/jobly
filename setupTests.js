@@ -1,12 +1,12 @@
-import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 configure({ testIdAttribute: 'data-testid' });
 
 beforeAll(() => {
-  // Set up any global mocks, stubs, or spies
+  // Set up global mocks, stubs, or spies
 });
 
-afterAll(() => {
-  // Clean up any global mocks, stubs, or spies
+afterAll(() => {  
+  // Clean up global mocks, stubs, or spies
 });
