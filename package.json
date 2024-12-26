@@ -39,23 +39,6 @@
   "main": "index.js",
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "jest": {
-    "transform": {
-      "^.+\\.[tj]sx?$": "babel-jest"
-    },
-    "testEnvironment": "jsdom",
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
-    }
-  },
-  "directories": {
-    "test": "test"
-  }
+  "license": "ISC"
+
 }
