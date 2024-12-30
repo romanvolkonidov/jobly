@@ -1,10 +1,10 @@
-// app/auth/verify-email/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
-export default function EmailVerificationPage() {
+function EmailVerification() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,5 +55,13 @@ export default function EmailVerificationPage() {
       {status === 'success' && <p>Email verified successfully! Redirecting to login...</p>}
       {status === 'error' && <p>Verification failed. Redirecting to login...</p>}
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmailVerification />
+    </Suspense>
   );
 }
