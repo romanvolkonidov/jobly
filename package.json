@@ -2,18 +2,16 @@
   "name": "jobly",
   "version": "0.1.0",
   "private": true,
- 
- "scripts": {
-   "test": "npm run lint && npm run type-check && npm run test:unit",
-   "test:unit": "jest --coverage",
-   "test:watch": "jest --watch",
-   "dev": "next dev",
-   "build": "prisma generate && next build", 
-   "start": "next start",
-   "lint": "next lint",
-   "type-check": "tsc --noEmit"
- 
-},
+  "scripts": {
+    "test": "npm run lint && npm run type-check && npm run test:unit",
+    "test:unit": "jest --coverage",
+    "test:watch": "jest --watch",
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
     "@prisma/client": "^6.1.0",
     "@radix-ui/react-slot": "^1.1.1",
@@ -24,6 +22,7 @@
     "clsx": "^2.1.1",
     "csrf": "^3.1.0",
     "express-rate-limit": "^7.5.0",
+    "framer-motion": "^11.15.0",
     "iron-session": "^8.0.4",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.469.0",
