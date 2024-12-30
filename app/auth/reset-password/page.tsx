@@ -1,10 +1,11 @@
 // app/auth/reset-password/page.tsx
 'use client';
 
+import { Suspense } from 'react';
 import ResetPasswordForm from '@/src/components/auth/ResetPasswordForm';
 import { useSearchParams } from 'next/navigation';
 
-export default function ResetPasswordPage() {
+function ResetPassword() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -13,4 +14,12 @@ export default function ResetPasswordPage() {
   }
 
   return <ResetPasswordForm token={token} />;
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPassword />
+    </Suspense>
+  );
 }
