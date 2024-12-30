@@ -15,9 +15,11 @@ export const POST = rateLimiterMiddleware(
       console.log('Email received:', email);
       
       
-      const user = await prisma.user.findUnique({ where: { email } });
-      console.log('2. User found:', !!user);
-
+      const user = await prisma.user.findUnique({ 
+        where: { email },
+        select: { email: true }
+      });
+      
       if (!user) {
         return NextResponse.json(
           { message: 'If an account exists, a reset link has been sent.' },

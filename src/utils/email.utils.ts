@@ -33,7 +33,7 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
+  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`;
   
   await sendEmail({
     to: email,

@@ -6,13 +6,13 @@ import { getIronSession, IronSession } from 'iron-session';
 
 
 export const sessionConfig = {
-  password: process.env.SESSION_SECRET!,  // Make sure this env var is set
+  password: process.env.SESSION_SECRET!,
   cookieName: 'jobly_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax' as const,
-    maxAge: 7 * 24 * 60 * 60
+    maxAge: 24 * 60 * 60 // 24 hours
   }
 } as const;
 
