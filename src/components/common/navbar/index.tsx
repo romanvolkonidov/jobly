@@ -1,9 +1,11 @@
 //src/components/common/navbar/index.tsx
 'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LogOut, Settings, User, ChevronDown, Bell } from 'lucide-react';
 import { tokens } from '@/src/styles/tokens';
 
@@ -15,6 +17,8 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  const pathname = usePathname();
+  const isAuthPage = pathname?.startsWith('/auth/');
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -35,9 +39,6 @@ export default function Navbar() {
 
     checkLoginStatus();
   }, []);
-
-  const location = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isAuthPage = location.startsWith('/auth/');
 
   return (
     <nav

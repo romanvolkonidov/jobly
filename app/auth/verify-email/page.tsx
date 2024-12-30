@@ -4,67 +4,56 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function VerifyEmail() {
- const router = useRouter();
- const params = useSearchParams();
- const [status, setStatus] = useState('verifying');
+export default function EmailVerificationPage() {
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
- useEffect(() => {
-   async function verifyEmail() {
-     const token = params.get('token');
-     
-     try {
-       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-       if (!csrfToken) throw new Error('CSRF token missing');
+  useEffect(() => {
+    const verifyEmail = async () => {
+      const token = searchParams.get('token');
+      if (!token) {
+        setStatus('error');
+        return;
+      }
 
-       const res = await fetch('/api/auth/verify-email', {
-         method: 'POST',
-         headers: { 
-           'Content-Type': 'application/json',
-           'x-csrf-token': csrfToken
-         },
-         body: JSON.stringify({ token })
-       });
+      try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) throw new Error('CSRF token not found');
 
-       if (!res.ok) throw new Error('Verification failed');
+        const verifyResponse = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken
+          },
+          body: JSON.stringify({ token })
+        });
 
-       // Auto login after verification
-       const loginRes = await fetch('/api/auth/auto-login', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           'x-csrf-token': csrfToken
-         },
-         body: JSON.stringify({ token })
-       });
+        if (!verifyResponse.ok) throw new Error('Verification failed');
 
-       if (loginRes.ok) {
-         setStatus('success');
-         router.push('/dashboard');
-       } else {
-         throw new Error('Auto-login failed');
-       }
-     } catch (error) {
-       console.error('Verification error:', error);
-       setStatus('error');
-     }
-   }
+        setStatus('success');
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 2000);
 
-   verifyEmail();
- }, [params, router]);
+      } catch (error) {
+        console.error('Verification error:', error);
+        setStatus('error');
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 2000);
+      }
+    };
 
- return (
-   <div className="min-h-screen flex items-center justify-center bg-gray-50">
-     <div className="p-8 bg-white rounded-lg shadow-md">
-       {status === 'verifying' && <h2>Verifying your email...</h2>}
-       {status === 'success' && <h2>Email verified! Redirecting to dashboard...</h2>}
-       {status === 'error' && (
-         <div>
-           <h2>Verification failed</h2>
-           <p>Verification failed. Please try again.</p>
-        </div>
-       )}
-     </div>
-   </div>
- );
+    verifyEmail();
+  }, [router, searchParams]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      {status === 'verifying' && <p>Verifying your email...</p>}
+      {status === 'success' && <p>Email verified successfully! Redirecting to login...</p>}
+      {status === 'error' && <p>Verification failed. Redirecting to login...</p>}
+    </div>
+  );
 }
