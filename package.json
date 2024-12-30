@@ -6,7 +6,7 @@
     "test": "npm run lint && npm run build && npm run test:unit",
     "test:unit": "jest",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build"
     "start": "next start",
     "lint": "next lint"
   },
