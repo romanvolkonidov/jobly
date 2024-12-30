@@ -5,9 +5,11 @@ import { cookies } from 'next/headers';
 import { sessionConfig } from '@/src/middleware/session';
 import type { IronSessionData } from '@/src/types/session';
 
+// app/api/auth/check-session/route.ts
 export async function GET() {
+  const cookieStore = await cookies();
   const session = await getIronSession<IronSessionData>(
-    cookies(),
+    cookieStore,
     sessionConfig
   );
 
