@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 interface MobileMenuProps {
   user: {
@@ -13,24 +13,37 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ user, closeAction }: MobileMenuProps) {
+  const router = useRouter();
+
+  const handleNavigation = (path: string) => {
+    closeAction();
+    router.push(path);
+  };
+
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-black bg-opacity-50"
-        onClick={closeAction}
-      />
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
-        className="fixed right-0 top-0 h-full w-full max-w-sm bg-white overflow-y-auto p-6 shadow-xl"
-      >
-        <div className="flex justify-end mb-2">
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+      className="fixed inset-0 z-50 bg-white overflow-y-auto p-6"
+    >
+      <div className="flex flex-col mb-6">
+        <div className="flex justify-between">
+          <div className="flex flex-col items-center w-20">
+            {user?.imageUrl ? (
+              <Image
+                src={user.imageUrl}
+                alt="User Profile Picture"
+                width={80}
+                height={80}
+                className="rounded-lg mb-2"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-gray-300 rounded-lg mb-2" />
+            )}
+            <span className="text-lg font-semibold text-center whitespace-nowrap">{user?.name || 'User'}</span>
+          </div>
           <button
             onClick={closeAction}
             className="text-gray-600 hover:text-gray-900 focus:outline-none"
@@ -38,43 +51,53 @@ export function MobileMenu({ user, closeAction }: MobileMenuProps) {
             ✕
           </button>
         </div>
+      </div>
 
-        <div className="flex flex-col items-start mb-8">
-          {user?.imageUrl ? (
-            <Image
-              src={user.imageUrl}
-              alt="User Profile Picture"
-              width={80}
-              height={80}
-              className="rounded-lg object-cover"
-            />
-          ) : (
-            <div className="w-20 h-20 bg-gray-300 rounded-lg" />
-          )}
-          <span className="mt-3 text-lg font-semibold">{user?.name || 'User'}</span>
+      <nav className="space-y-3">
+        {/* Primary Actions */}
+        <div className="space-y-2">
+          <button
+            onClick={() => handleNavigation('/tasks')}
+            className="block w-full p-4 text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
+            Find Tasks
+          </button>
+          <button
+            onClick={() => handleNavigation('/projects')}
+            className="block w-full p-4 text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
+            My Projects
+          </button>
+          <button
+            onClick={() => handleNavigation('/categories')}
+            className="block w-full p-4 text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
+            Create a task
+          </button>
         </div>
 
-        <nav className="space-y-6">
-          <Link href="/tasks" className="block text-lg font-medium text-gray-700 hover:text-gray-900">
-            Find Tasks
-          </Link>
-          <Link href="/projects" className="block text-lg font-medium text-gray-700 hover:text-gray-900">
-            My Projects
-          </Link>
-          <Link href="/create" className="block text-lg font-medium text-gray-700 hover:text-gray-900">
-            Post a Task
-          </Link>
-          <Link href="/profile" className="block text-md text-gray-700 hover:text-gray-900">
+        {/* Secondary Actions */}
+        <div className="space-y-2 pt-2 border-t border-gray-200">
+          <button
+            onClick={() => handleNavigation('/profile')}
+            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
             Profile
-          </Link>
-          <Link href="/settings" className="block text-md text-gray-700 hover:text-gray-900">
+          </button>
+          <button
+            onClick={() => handleNavigation('/settings')}
+            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
             Settings
-          </Link>
-          <Link href="/auth/logout" className="block text-md text-gray-700 hover:text-gray-900">
+          </button>
+          <button
+            onClick={() => handleNavigation('/auth/logout')}
+            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          >
             Logout
-          </Link>
-        </nav>
-      </motion.div>
-    </>
+          </button>
+        </div>
+      </nav>
+    </motion.div>
   );
 }
