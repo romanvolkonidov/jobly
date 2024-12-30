@@ -1,32 +1,45 @@
+// src/middleware/auth.ts
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getIronSession } from 'iron-session';
+import { sessionConfig } from './session';
+import { prisma } from '@/src/lib/prisma';
+import type { IronSessionData } from '@/src/types/session';
+
+const PROTECTED_ACTIONS = [
+  '/api/tasks/create',
+  '/api/tasks/bid', 
+  '/api/messages/send',
+  '/api/payments'
+];
 
 export async function authMiddleware(request: NextRequest) {
-  const token = await getToken({ req: request });
+  const response = new Response();
+  const session = await getIronSession<IronSessionData>(request, response, sessionConfig);
   const path = request.nextUrl.pathname;
-  
-  const publicPaths = ['/tasks', '/tasks/[id]'];
-  const authRequired = ['/tasks/create/post', '/tasks/respond/submit'];
-  
-  const isPublicPath = publicPaths.some(p => path.startsWith(p));
-  const requiresAuth = authRequired.some(p => path.includes(p));
 
-  if (isPublicPath && !requiresAuth) {
-    return NextResponse.next();
-  }
+  const publicPaths = [
+    '/',
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/verify-email',
+  ];
 
-  if (requiresAuth && !token) {
-    const response = NextResponse.json(
-      { message: 'Authentication required' },
-      { status: 401 }
-    );
-    return response;
-  }
+  if (publicPaths.includes(path)) return NextResponse.next();
+  if (!session.userId) return NextResponse.redirect(new URL('/auth/login', request.url));
 
-  if (token?.role === 'worker' && path.includes('/tasks/create')) {
-    return NextResponse.redirect(new URL('/unauthorized', request.url));
+  if (PROTECTED_ACTIONS.some(protectedPath => path.startsWith(protectedPath))) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { emailVerified: true }
+    });
+
+    if (!user?.emailVerified) {
+      return NextResponse.redirect(new URL('/auth/verify', request.url));
+    }
   }
 
   return NextResponse.next();

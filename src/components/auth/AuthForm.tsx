@@ -1,103 +1,236 @@
+// src/components/auth/AuthForm.tsx
+
+'use client';
+
 import { useState } from 'react';
-import { Card } from '../ui/Card';
+import { Card } from '@/src/components/ui/Card';
+import Link from 'next/link';
+import { authStyles } from '@/src/styles/auth.styles';
+import { validatePassword } from '@/src/utils/validation';
 
-const AuthForm = () => {
-  const [formType, setFormType] = useState('register');
-  const [role, setRole] = useState('client');
+interface FormData {
+ name: string;
+ email: string;
+ password: string;
+}
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <div className="p-6 space-y-6">
-          <h1 className="text-2xl font-semibold text-[#111827]">
-            {formType === 'register' ? 'Create Account' : 'Welcome Back'}
-          </h1>
-          
-          {formType === 'register' && (
-            <div className="flex gap-4 p-1 bg-[#F3F4F6] rounded-md">
-              <button
-                onClick={() => setRole('client')}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all
-                  ${role === 'client' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-[#4B5563]'}`}
-              >
-                I need something done
-              </button>
-              <button
-                onClick={() => setRole('worker')}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all
-                  ${role === 'worker' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-[#4B5563]'}`}
-              >
-                I want to work
-              </button>
-            </div>
-          )}
+interface AuthFormProps {
+  defaultView?: 'login' | 'register';
+  onSuccess?: () => void;
+}
 
-          <form className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#4B5563]">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                placeholder="Enter your full name"
-                className="mt-1 w-full rounded-md border border-[#D1D5DB] px-3 py-2
-                  focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
-                required
-              />
-            </div>
+const AuthForm = ({ defaultView = 'register' }: AuthFormProps) => {
+ const [formType, setFormType] = useState<'login' | 'register'>(defaultView);
+ const [loading, setLoading] = useState(false);
+ const [message, setMessage] = useState('');
+ const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+ const [formData, setFormData] = useState<FormData>({
+   name: '',
+   email: '',
+   password: '',
+ });
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#4B5563]">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                className="mt-1 w-full rounded-md border border-[#D1D5DB] px-3 py-2
-                  focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
-                required
-              />
-            </div>
+ const validateForm = () => {
+   if (formType === 'register' && !formData.name.trim()) {
+     setMessage('Name is required');
+     setMessageType('error');
+     return false;
+   }
+   if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+     setMessage('Valid email is required');
+     setMessageType('error');
+     return false;
+   }
+   
+   const passwordValidation = validatePassword(formData.password);
+   if (!passwordValidation.isValid) {
+     setMessage(passwordValidation.errors.join('\n'));
+     setMessageType('error');
+     return false;
+   }
+   
+   return true;
+ };
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#4B5563]">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Create a password"
-                className="mt-1 w-full rounded-md border border-[#D1D5DB] px-3 py-2
-                  focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
-                required
-              />
-            </div>
+ // In AuthForm.tsx, update the handleSubmit:
 
-            <button
-              type="submit"
-              className="w-full bg-[#2563EB] text-white py-2 px-4 rounded-md
-                font-medium hover:bg-[#1D4ED8] focus:outline-none focus:ring-2
-                focus:ring-[#2563EB] focus:ring-offset-2"
-            >
-              {formType === 'register' ? 'Create Account' : 'Sign In'}
-            </button>
-          </form>
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validateForm() || loading) return;
+  
+  setLoading(true);
+  setMessage('');
 
-          <p className="text-center text-sm text-[#4B5563]">
-            {formType === 'register' ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button
-              onClick={() => setFormType(formType === 'register' ? 'login' : 'register')}
-              className="text-[#2563EB] font-medium hover:text-[#1D4ED8]"
-            >
-              {formType === 'register' ? 'Sign In' : 'Create One'}
-            </button>
-          </p>
-        </div>
-      </Card>
-    </div>
-  );
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) throw new Error('CSRF token not found');
+
+    const response = await fetch(formType === 'register' ? '/api/auth/register' : '/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Authentication failed');
+    }
+
+// In AuthForm.tsx, remove router import and declaration
+// Update handleSubmit to use onSuccess prop:
+if (formType === 'register') {
+  setMessageType('success');
+  setMessage('Please check your email to verify your account');
+} else {
+  window.location.href = '/'; // Redirect to home page after login
+}
+  } catch (error) {
+    setMessageType('error');
+    setMessage(error instanceof Error ? error.message : 'Authentication failed');
+  } finally {
+    setLoading(false);
+  }
+};
+
+ // Rest of the component remains the same
+ return (
+   <div className={authStyles.container}>
+     <Card className={authStyles.wrapper}>
+       <div className={authStyles.formContainer}>
+         <h1 className={authStyles.title}>
+           {formType === 'register' ? 'Create Account' : 'Welcome Back'}
+         </h1>
+
+         {message && (
+           <div className={authStyles.message(messageType || 'error')}>
+             {message}
+             {message.includes('verify your email') && (
+               <button
+                 onClick={async () => {
+                   try {
+                     const response = await fetch('/api/auth/resend-verification', {
+                       method: 'POST',
+                       headers: {
+                         'Content-Type': 'application/json',
+                         'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                       },
+                       body: JSON.stringify({ email: formData.email })
+                     });
+                     
+                     if (response.ok) {
+                       setMessage('Verification email sent. Please check your inbox.');
+                       setMessageType('success');
+                     }
+                   } catch {
+                     setMessage('Failed to send verification email. Please try again.');
+                     setMessageType('error');
+                   }
+                 }}
+                 className={`${authStyles.link} ml-2`}
+               >
+                 Resend verification email
+               </button>
+             )}
+           </div>
+         )}
+
+         <form onSubmit={handleSubmit} className={authStyles.form}>
+           {formType === 'register' && (
+             <div>
+               <label htmlFor="name" className={authStyles.label}>
+                 Full Name
+               </label>
+               <input
+                 id="name"
+                 type="text"
+                 value={formData.name}
+                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                 className={authStyles.input}
+                 disabled={loading}
+               />
+             </div>
+           )}
+
+           <div>
+             <label htmlFor="email" className={authStyles.label}>
+               Email
+             </label>
+             <input
+               id="email"
+               type="email"
+               value={formData.email}
+               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+               className={authStyles.input}
+               disabled={loading}
+             />
+           </div>
+
+           <div>
+             <label htmlFor="password" className={authStyles.label}>
+               Password
+             </label>
+             <input
+               id="password"
+               type="password"
+               value={formData.password}
+               onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+               className={authStyles.input}
+               disabled={loading}
+             />
+           </div>
+
+           {formType === 'login' && (
+             <div className="text-right">
+               <Link href="/auth/forgot-password" className={authStyles.link}>
+                 Forgot password?
+               </Link>
+             </div>
+           )}
+
+           <button
+             type="submit"
+             disabled={loading}
+             className={authStyles.button}
+           >
+             {loading 
+               ? 'Please wait...' 
+               : formType === 'register' 
+                 ? 'Create Account' 
+                 : 'Sign In'}
+           </button>
+         </form>
+
+         <p className="text-center text-sm text-gray-600 mt-4">
+           {formType === 'register' 
+             ? 'Already have an account?' 
+             : "Don't have an account?"}{' '}
+           <button
+             type="button"
+             onClick={() => {
+               if (loading) return;
+               setFormType(formType === 'register' ? 'login' : 'register');
+               setMessage('');
+               setMessageType(null);
+               setFormData({
+                 name: '',
+                 email: '',
+                 password: '',
+               });
+             }}
+             className={authStyles.link}
+             disabled={loading}
+           >
+             {formType === 'register' ? 'Sign In' : 'Create One'}
+           </button>
+         </p>
+       </div>
+     </Card>
+   </div>
+ );
 };
 
 export default AuthForm;

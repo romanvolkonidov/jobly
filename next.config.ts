@@ -1,20 +1,15 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    // Core application settings
-    APP_NAME: process.env.APP_NAME,
-    API_VERSION: process.env.API_VERSION,
-    
-    // Feature flags for phased rollout
-    ENABLE_PAYMENTS: process.env.ENABLE_PAYMENTS,
-    ENABLE_REALTIME: process.env.ENABLE_REALTIME,
-    ENABLE_NOTIFICATIONS: process.env.ENABLE_NOTIFICATIONS,
+    APP_NAME: process.env.APP_NAME || 'Jobly',
+    API_VERSION: process.env.API_VERSION || 'v1',
+    ENABLE_PAYMENTS: process.env.ENABLE_PAYMENTS || 'false',
+    ENABLE_REALTIME: process.env.ENABLE_REALTIME || 'false',
+    ENABLE_NOTIFICATIONS: process.env.ENABLE_NOTIFICATIONS || 'false',
   },
   
   output: 'standalone',
   
-  // Configure image optimization for task photos and user profiles
   images: {
     domains: [
       'your-cdn.com',
@@ -25,28 +20,21 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
-  // Progressive Web App configuration
-  pwa: {
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-  },
-  
-  // API routes configuration
-  rewrites: async () => {
+  async rewrites() {
+    const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
+    
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.API_BASE_URL}/api/v1/:path*`,
+        destination: `${API_BASE_URL}/api/v1/:path*`,
       },
       {
         source: '/ws',
-        destination: `${process.env.WEBSOCKET_URL}/ws`,
+        destination: `http://localhost:8080/ws`,
       },
     ];
   },
   
-  // Security headers
   async headers() {
     return [
       {
