@@ -1,16 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
+import { cookies } from 'next/headers';
 import type { IronSessionData } from '@/src/types/session';
-import type { NextRequest } from 'next/server';
 
-export async function POST(
-  req: NextRequest,
-  context: { params: { taskId: string } }
-) {
+type Props = {
+  params: { taskId: string }
+}
+
+export async function POST(req: NextRequest, props: Props) {
   try {
-    const session = await getIronSession<IronSessionData>(req, sessionConfig);
+    const cookiesList = await cookies();
+    const sessionCookie = cookiesList.get('session');
+    
+    if (!sessionCookie) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const session = JSON.parse(sessionCookie.value) as IronSessionData;
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,7 +27,7 @@ export async function POST(
       data: {
         amount: price,
         proposal: message,
-        taskId: context.params.taskId,
+        taskId: props.params.taskId,
         userId: session.userId,
         status: 'pending'
       }
