@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
 import { authStyles } from '@/src/styles/auth.styles';
-import { validatePassword } from '@/src/utils/validation';
+//import { validatePassword } from '@/src/utils/validation';
 
 interface FormData {
  name: string;
@@ -30,7 +30,7 @@ const AuthForm = ({ defaultView = 'register' }: AuthFormProps) => {
    password: '',
  });
 
- const validateForm = () => {
+ //const validateForm = () => {
    if (formType === 'register' && !formData.name.trim()) {
      setMessage('Name is required');
      setMessageType('error');
@@ -42,15 +42,15 @@ const AuthForm = ({ defaultView = 'register' }: AuthFormProps) => {
      return false;
    }
    
-   const passwordValidation = validatePassword(formData.password);
-   if (!passwordValidation.isValid) {
-     setMessage(passwordValidation.errors.join('\n'));
-     setMessageType('error');
-     return false;
-   }
+   //const passwordValidation = validatePassword(formData.password);
+   //if (!passwordValidation.isValid) {
+    // setMessage(passwordValidation.errors.join('\n'));
+    // setMessageType('error');
+    // return false;
+   //}
    
-   return true;
- };
+  // return true;
+ //};
 
  const handleSubmit = async (e: React.FormEvent) => {
    e.preventDefault();
