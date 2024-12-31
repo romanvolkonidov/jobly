@@ -1,4 +1,4 @@
-//src/components/common/modals/TaskResponseModal.tsx
+// src/components/common/modals/TaskResponseModal.tsx
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
@@ -7,7 +7,7 @@ interface TaskResponseModalProps {
   maxBudget: number;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (price: number, message: string) => void;
+  onResponse: (price: number, message: string) => void;
 }
 
 export default function TaskResponseModal({
@@ -15,17 +15,49 @@ export default function TaskResponseModal({
   maxBudget,
   isOpen,
   onClose,
-  onSubmit
+  onResponse,
 }: TaskResponseModalProps) {
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(Number(price), message);
-    onClose();
+
+    const parsedPrice = Number(price);
+
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      setError('Please enter a valid price.');
+      return;
+    }
+
+    if (parsedPrice > maxBudget) {
+      setError(`Price cannot exceed ${maxBudget.toLocaleString()} KES.`);
+      return;
+    }
+
+    if (message.trim() === '') {
+      setError('Message is required.');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await onResponse(parsedPrice, message);
+      setPrice('');
+      setMessage('');
+      onClose();
+    } catch (submitError) {
+      console.error('Submission error:', submitError);
+      setError('Failed to send the response. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,9 +67,15 @@ export default function TaskResponseModal({
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{taskTitle}</h2>
-              <p className="text-sm text-gray-600 mt-1">Client offers up to {maxBudget.toLocaleString()} KES</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Client offers up to {maxBudget.toLocaleString()} KES
+              </p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close"
+            >
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -52,14 +90,12 @@ export default function TaskResponseModal({
                   onChange={(e) => setPrice(e.target.value)}
                   className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-primary-blue"
                   placeholder="Enter amount in KES"
+                  disabled={isSubmitting}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">KES</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                  KES
+                </span>
               </div>
-              {Number(price) > maxBudget && (
-                <p className="mt-2 text-sm text-red-600">
-                  Lower price will give you more chances to get the job
-                </p>
-              )}
             </div>
 
             <div>
@@ -69,14 +105,20 @@ export default function TaskResponseModal({
                 onChange={(e) => setMessage(e.target.value)}
                 className="w-full px-4 py-3 border rounded-lg h-32 resize-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue"
                 placeholder="Describe your experience and explain why you should be chosen for this task"
+                disabled={isSubmitting}
               />
             </div>
 
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+
             <button
               type="submit"
-              className="w-full bg-primary-blue text-white py-4 px-6 rounded-lg font-medium hover:bg-primary-blue/90 transition-colors"
+              className={`w-full bg-primary-blue text-white py-4 px-6 rounded-lg font-medium ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-blue/90'
+              } transition-colors`}
+              disabled={isSubmitting}
             >
-              Send Response
+              {isSubmitting ? 'Submitting...' : 'Send Response'}
             </button>
           </form>
         </div>

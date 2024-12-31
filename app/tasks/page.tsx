@@ -91,6 +91,13 @@ export default function TaskSearchPage() {
     [router]
   );
 
+  const toggleModal = () => setIsModalOpen((prev) => !prev);
+
+  const handleResponse = (price: number, message: string) => {
+    console.log('Response:', { price, message });
+    setIsModalOpen(false);
+  };
+
   if (isError) {
     return (
       <div className="text-center py-8 text-red-600">
@@ -105,17 +112,11 @@ export default function TaskSearchPage() {
     );
   }
 
-  const handleResponse = (price: number, message: string) => {
-    console.log({ price, message });
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Tab Buttons */}
       <div className="flex gap-4 mb-8">
         <button
-          role="tab"
-          aria-selected={activeTab === 'all'}
           onClick={() => setActiveTab('all')}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${
             activeTab === 'all'
@@ -126,8 +127,6 @@ export default function TaskSearchPage() {
           All Tasks
         </button>
         <button
-          role="tab"
-          aria-selected={activeTab === 'recommended'}
           onClick={() => setActiveTab('recommended')}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${
             activeTab === 'recommended'
@@ -204,14 +203,6 @@ export default function TaskSearchPage() {
                   ))}
                 </div>
               )}
-              {hasNextPage && !isFetchingNextPage && (
-                <button
-                  onClick={() => fetchNextPage()}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                >
-                  Load More
-                </button>
-              )}
               <div ref={ref} />
             </div>
           )}
@@ -222,7 +213,6 @@ export default function TaskSearchPage() {
           {/* Budget Range Filter */}
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h3 className="font-semibold mb-4">Budget Range</h3>
-            <label className="block font-medium mb-2">Select range:</label>
             <Slider
               min={0}
               max={100000}
@@ -258,19 +248,19 @@ export default function TaskSearchPage() {
               <option value="budget_asc">Lowest Budget</option>
             </select>
           </div>
-
-          {/* Reset Filters */}
-          <button
-            onClick={() => {
-              setFilters({});
-              setBudgetRange([0, 100000]);
-            }}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
-          >
-            Reset Filters
-          </button>
         </div>
       </div>
+
+      {isModalOpen && (
+  <TaskResponseModal
+    taskTitle="Task Title Here" // Example title
+    maxBudget={50000} // Example budget
+    isOpen={isModalOpen}
+    onClose={toggleModal}
+    onResponse={handleResponse}
+  />
+)}
+
     </div>
   );
 }

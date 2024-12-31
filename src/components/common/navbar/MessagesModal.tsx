@@ -30,7 +30,6 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageContent[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,7 +54,6 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
   };
 
   const fetchMessages = async (conversationId: string) => {
-    setIsLoading(true);
     try {
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'GET',
@@ -75,7 +73,6 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
       console.error('Error fetching messages:', error);
       setMessages([]);
     } finally {
-      setIsLoading(false);
     }
   };
 
