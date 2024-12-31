@@ -44,7 +44,7 @@ export default function TaskSearchPage() {
   const { ref, inView } = useInView();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchTasks = async ({ pageParam = 1 }) => {
+  const fetchTasks = useCallback(async ({ pageParam = 1 }) => {
     const searchParams = new URLSearchParams({
       page: pageParam.toString(),
       limit: '10',
@@ -58,7 +58,7 @@ export default function TaskSearchPage() {
     const response = await fetch(`${endpoint}?${searchParams}`);
     if (!response.ok) throw new Error('Failed to fetch tasks');
     return response.json();
-  };
+  }, [activeTab, filters, budgetRange]);
 
   const {
     data,
@@ -94,7 +94,13 @@ export default function TaskSearchPage() {
   if (isError) {
     return (
       <div className="text-center py-8 text-red-600">
-        Error: {(error as Error).message}
+        <p>Error: {(error as Error).message}</p>
+        <button
+          onClick={() => fetchNextPage()}
+          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -108,6 +114,8 @@ export default function TaskSearchPage() {
       {/* Tab Buttons */}
       <div className="flex gap-4 mb-8">
         <button
+          role="tab"
+          aria-selected={activeTab === 'all'}
           onClick={() => setActiveTab('all')}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${
             activeTab === 'all'
@@ -118,6 +126,8 @@ export default function TaskSearchPage() {
           All Tasks
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'recommended'}
           onClick={() => setActiveTab('recommended')}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${
             activeTab === 'recommended'
@@ -194,6 +204,14 @@ export default function TaskSearchPage() {
                   ))}
                 </div>
               )}
+              {hasNextPage && !isFetchingNextPage && (
+                <button
+                  onClick={() => fetchNextPage()}
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                >
+                  Load More
+                </button>
+              )}
               <div ref={ref} />
             </div>
           )}
@@ -204,6 +222,7 @@ export default function TaskSearchPage() {
           {/* Budget Range Filter */}
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h3 className="font-semibold mb-4">Budget Range</h3>
+            <label className="block font-medium mb-2">Select range:</label>
             <Slider
               min={0}
               max={100000}
@@ -239,6 +258,17 @@ export default function TaskSearchPage() {
               <option value="budget_asc">Lowest Budget</option>
             </select>
           </div>
+
+          {/* Reset Filters */}
+          <button
+            onClick={() => {
+              setFilters({});
+              setBudgetRange([0, 100000]);
+            }}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
+          >
+            Reset Filters
+          </button>
         </div>
       </div>
     </div>

@@ -12,6 +12,13 @@ interface Message {
   timestamp: string;
 }
 
+interface MessageContent {
+  id: string;
+  content: string;
+  isSender: boolean;
+  timestamp: string;
+}
+
 interface MessagesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,14 +28,21 @@ interface MessagesModalProps {
 export default function MessagesModal({ isOpen, onClose, initialTaskId }: MessagesModalProps) {
   const [conversations, setConversations] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MessageContent[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchConversations();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (initialTaskId && isOpen) {
+      setSelectedConversation(initialTaskId);
+    }
+  }, [initialTaskId, isOpen]);
 
   const fetchConversations = async () => {
     try {
@@ -41,12 +55,27 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
   };
 
   const fetchMessages = async (conversationId: string) => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`/api/messages/${conversationId}`);
+      const response = await fetch(`/api/messages/${conversationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
+      }
+  
       const data = await response.json();
       setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
