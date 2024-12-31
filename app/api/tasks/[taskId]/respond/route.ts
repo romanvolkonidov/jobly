@@ -7,7 +7,7 @@ import type { NextRequest } from 'next/server';
 
 export async function POST(
   req: NextRequest,
-  context: { params: { taskId: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
     const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
@@ -21,7 +21,7 @@ export async function POST(
       data: {
         amount: price,
         proposal: message,
-        taskId: context.params.taskId,
+        taskId: params.taskId,
         userId: session.userId,
         status: 'pending'
       }
