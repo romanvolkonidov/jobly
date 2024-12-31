@@ -7,22 +7,40 @@ const nextConfig = {
     ENABLE_REALTIME: process.env.ENABLE_REALTIME || 'false',
     ENABLE_NOTIFICATIONS: process.env.ENABLE_NOTIFICATIONS || 'false',
   },
-  
+
   output: 'standalone',
-  
+
   images: {
     domains: [
       'your-cdn.com',
       'your-s3-bucket.amazonaws.com',
-      'marketplace-uploads.your-domain.com'
+      'marketplace-uploads.your-domain.com',
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  
+
+  experimental: {
+    optimizeCss: true,
+    modern: true,
+    optimizeFonts: true,
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
+
+  httpAgentOptions: {
+    keepAlive: true,
+  },
+
+  // Define async rewrites
   async rewrites() {
     const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
-    
     return [
       {
         source: '/api/v1/:path*',
@@ -30,11 +48,12 @@ const nextConfig = {
       },
       {
         source: '/ws',
-        destination: `http://localhost:8080/ws`,
+        destination: 'http://localhost:8080/ws',
       },
     ];
   },
-  
+
+  // Define async headers
   async headers() {
     return [
       {
@@ -54,7 +73,8 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' wss: https:;",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' wss: https:;",
           },
         ],
       },

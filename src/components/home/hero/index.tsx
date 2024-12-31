@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import {  withLazyLoading } from '@/src/components/common/Performance';
 
 const searchPlaceholders = [
   "Find a plumber nearby...",
@@ -11,7 +12,7 @@ const searchPlaceholders = [
   "Search for a graphic designer..."
 ];
 
-export default function HeroSection() {
+function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -85,3 +86,5 @@ export default function HeroSection() {
     </div>
   );
 }
+
+export default withLazyLoading(HeroSection);

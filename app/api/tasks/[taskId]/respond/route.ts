@@ -1,3 +1,5 @@
+// app/api/tasks/[taskId]/respond/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
@@ -14,6 +16,7 @@ export async function POST(request: Request) {
     const taskId = request.url.split('/tasks/')[1].split('/respond')[0];
     const { price, message } = await request.json();
 
+    // Create the bid
     const bid = await prisma.bid.create({
       data: {
         amount: price,
@@ -21,6 +24,27 @@ export async function POST(request: Request) {
         taskId,
         userId: session.userId,
         status: 'pending'
+      }
+    });
+
+    // Create a message thread for the task owner and worker
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: { userId: true }
+    });
+
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    // Create initial message
+    await prisma.message.create({
+      data: {
+        content: message,
+        fromUserId: session.userId,
+        toUserId: task.userId,
+        taskId,
+        bidId: bid.id
       }
     });
 

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface Message {
   id: string;
   senderId: string;
   senderName: string;
+  senderImageUrl?: string;
   taskId: string;
   taskTitle: string;
   lastMessage: string;
@@ -16,6 +19,7 @@ interface MessageContent {
   id: string;
   content: string;
   isSender: boolean;
+  userImageUrl?: string;
   timestamp: string;
 }
 
@@ -25,7 +29,7 @@ interface MessagesModalProps {
   initialTaskId?: string;
 }
 
-export default function MessagesModal({ isOpen, onClose, initialTaskId }: MessagesModalProps) {
+function MessagesModal({ isOpen, onClose, initialTaskId }: MessagesModalProps) {
   const [conversations, setConversations] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageContent[]>([]);
@@ -42,6 +46,12 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
       setSelectedConversation(initialTaskId);
     }
   }, [initialTaskId, isOpen]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation);
+    }
+  }, [selectedConversation]);
 
   const fetchConversations = async () => {
     try {
@@ -116,16 +126,27 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
                   selectedConversation === conv.id ? 'bg-gray-50' : ''
                 }`}
               >
-                <div className="font-medium">{conv.senderName}</div>
-                <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {new Date(conv.timestamp).toLocaleDateString()}
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={conv.senderImageUrl || '/default-avatar.png'}
+                    alt={conv.senderName}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
+                  />
+                  <div>
+                    <div className="font-medium">{conv.senderName}</div>
+                    <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(conv.timestamp).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
               </button>
             ))}
           </div>
         </div>
-
+   
         {/* Messages Area */}
         <div className="flex-1 flex flex-col">
           {selectedConversation ? (
@@ -139,29 +160,41 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
                   View Task: {conversations.find(c => c.id === selectedConversation)?.taskTitle}
                 </Link>
               </div>
-
+   
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`mb-4 ${
-                      msg.isSender ? 'text-right' : 'text-left'
-                    }`}
+                    className={`flex items-start gap-2 ${msg.isSender ? 'flex-row-reverse' : 'flex-row'}`}
                   >
+                    <Image
+                      src={msg.userImageUrl || '/default-avatar.png'}
+                      alt="User"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
+                    />
                     <div
-                      className={`inline-block p-3 rounded-lg ${
+                      className={`max-w-[70%] break-words rounded-xl px-4 py-2 ${
                         msg.isSender
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
-                      {msg.content}
+                      <p>{msg.content}</p>
+                      <span 
+                        className={`text-xs ${
+                          msg.isSender ? 'text-blue-100' : 'text-gray-500'
+                        }`}
+                      >
+                        {new Date(msg.timestamp).toLocaleTimeString()}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
-
+   
               {/* Message Input */}
               <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
                 <div className="flex gap-2">
@@ -187,7 +220,7 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
             </div>
           )}
         </div>
-
+   
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -197,5 +230,7 @@ export default function MessagesModal({ isOpen, onClose, initialTaskId }: Messag
         </button>
       </div>
     </div>
-  );
+   );
 }
+
+export default withLazyLoading(MessagesModal);

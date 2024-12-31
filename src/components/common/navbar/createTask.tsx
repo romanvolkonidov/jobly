@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { tokens } from '@/src/styles/tokens';
 import { useState } from 'react';
 import { useIsMobile } from '@/src/hooks/useIsMobile';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface CategoryWithSubcategories {
   name: string;
@@ -14,7 +15,7 @@ interface CategoryMenuProps {
   className?: string;
 }
 
-export const CategoryMenu = ({ categories, className }: CategoryMenuProps) => {
+function CategoryMenu({ categories, className }: CategoryMenuProps) {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -107,4 +108,6 @@ export const CategoryMenu = ({ categories, className }: CategoryMenuProps) => {
       ))}
     </div>
   );
-};
+}
+
+export default withLazyLoading(CategoryMenu);

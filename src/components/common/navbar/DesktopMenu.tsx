@@ -1,6 +1,7 @@
 //src/components/common/navbar/DesktopMenu.tsx
 'use client';
 
+import { withLazyLoading } from '@/src/components/common/Performance';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { categories } from '@/src/data/categories';
@@ -9,7 +10,7 @@ interface DesktopMenuProps {
   isLoggedIn: boolean; // Add this prop
 }
 
-export function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
+function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [menuTop, setMenuTop] = useState(0);
@@ -101,3 +102,5 @@ export function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
     </div>
   );
 }
+
+export default withLazyLoading(DesktopMenu);

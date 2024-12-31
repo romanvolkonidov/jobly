@@ -2,21 +2,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MenuToggle } from './MenuToggle';
-import { MobileMenu } from './MobileMenu';
-import { DesktopMenu } from './DesktopMenu';
-import { UserMenu } from './UserMenu';
+import MenuToggle from './MenuToggle';
+import MobileMenu from './MobileMenu';
+import DesktopMenu from './DesktopMenu';
+import UserMenu from './UserMenu';
 import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
 import MessagesButton from './MessagesButton';
 import { Bell } from 'lucide-react';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface UserData {
   imageUrl?: string | null;
   name?: string | null;
 }
 
-export default function Navbar() {
+function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
@@ -104,3 +105,5 @@ export default function Navbar() {
     </nav>
   );
 }
+
+export default withLazyLoading(Navbar);

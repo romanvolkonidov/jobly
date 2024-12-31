@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
@@ -15,7 +16,7 @@ interface UserMenuProps {
   onLogoutAction: () => void; // Add this prop
 }
 
-export function UserMenu({ 
+function UserMenu({ 
   isUserMenuOpen, 
   setIsUserMenuOpenAction, 
   user, 
@@ -91,3 +92,5 @@ export function UserMenu({
     </div>
   );
 }
+
+export default withLazyLoading(UserMenu);

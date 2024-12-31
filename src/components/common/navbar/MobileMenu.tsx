@@ -4,6 +4,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface MobileMenuProps {
   user: {
@@ -14,7 +15,7 @@ interface MobileMenuProps {
   closeAction: () => void;
 }
 
-export function MobileMenu({ user, isLoggedIn, closeAction }: MobileMenuProps) {
+function MobileMenu({ user, isLoggedIn, closeAction }: MobileMenuProps) {
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
@@ -118,3 +119,5 @@ export function MobileMenu({ user, isLoggedIn, closeAction }: MobileMenuProps) {
     </motion.div>
   );
 }
+
+export default withLazyLoading(MobileMenu);

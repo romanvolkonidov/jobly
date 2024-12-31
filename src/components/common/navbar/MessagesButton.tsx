@@ -1,8 +1,9 @@
 import { MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import MessagesModal from './MessagesModal';
+import { withLazyLoading } from '@/src/components/common/Performance';
 
-export default function MessagesButton() {
+function MessagesButton() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -18,3 +19,5 @@ export default function MessagesButton() {
     </>
   );
 }
+
+export default withLazyLoading(MessagesButton);
