@@ -1,21 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+//this component is responsible for creating a bid for a task
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { sessionConfig } from '@/src/middleware/session';
 import type { IronSessionData } from '@/src/types/session';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { taskId: string } }
-) {
+export async function POST(req: Request, { params }: { params: { taskId: string } }) {
   try {
-    const cookiesList = await cookies();
-    const sessionCookie = cookiesList.get('session');
-    
-    if (!sessionCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = JSON.parse(sessionCookie.value) as IronSessionData;
+    const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
