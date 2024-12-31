@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
 
 interface FormData {
