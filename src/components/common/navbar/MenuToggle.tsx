@@ -1,3 +1,4 @@
+//src/components/common/navbar/MenuToggle.tsx
 import { Menu } from 'lucide-react';
 
 type MenuToggleProps = {

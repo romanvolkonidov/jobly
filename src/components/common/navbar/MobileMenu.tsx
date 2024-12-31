@@ -1,3 +1,4 @@
+//src/components/common/navbar/MobileMenu.tsx
 'use client';
 
 import Image from 'next/image';

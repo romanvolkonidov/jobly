@@ -54,41 +54,55 @@ const AuthForm = ({ defaultView = 'register' }: AuthFormProps) => {
 
  // In AuthForm.tsx, update the handleSubmit:
 
- const handleSubmit = async (e: React.FormEvent) => {
+// src/components/auth/AuthForm.tsx
+
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!validateForm() || loading) return;
+  if (loading) return;
   
   setLoading(true);
   setMessage('');
+
+  // Add logging to debug
+  console.log('Form type:', formType);
+  console.log('Form data:', formData);
 
   try {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (!csrfToken) throw new Error('CSRF token not found');
 
-    const response = await fetch(formType === 'register' ? '/api/auth/register' : '/api/auth/login', {
+    // Use the correct endpoint based on form type
+    const endpoint = formType === 'register' ? '/api/auth/register' : '/api/auth/login';
+    
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        ...(formType === 'register' ? { name: formData.name } : {})
+      })
     });
     
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Authentication failed');
+      throw new Error(data.error || data.message || 'Authentication failed');
     }
 
-// In AuthForm.tsx, remove router import and declaration
-// Update handleSubmit to use onSuccess prop:
-if (formType === 'register') {
-  setMessageType('success');
-  setMessage('Please check your email to verify your account');
-} else {
-  window.location.href = '/'; // Redirect to home page after login
-}
+    if (formType === 'register') {
+      setMessageType('success');
+      setMessage('Please check your email to verify your account');
+    } else {
+      // Successful login
+      window.location.href = '/';
+    }
+
   } catch (error) {
+    console.error('Authentication error:', error);
     setMessageType('error');
     setMessage(error instanceof Error ? error.message : 'Authentication failed');
   } finally {

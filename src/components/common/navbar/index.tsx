@@ -1,3 +1,4 @@
+//src/components/common/navbar/index.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +8,8 @@ import { DesktopMenu } from './DesktopMenu';
 import { UserMenu } from './UserMenu';
 import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
+import MessagesButton from './MessagesButton';
+import { Bell } from 'lucide-react';
 
 interface UserData {
   imageUrl?: string | null;
@@ -63,23 +66,31 @@ export default function Navbar() {
           <DesktopMenu isLoggedIn={isLoggedIn} />
         </div>
 
-        <div className="flex items-center space-x-4">
-          <MenuToggle
-            isMobileMenuOpen={isMobileMenuOpen}
-            setIsMobileMenuOpen={setIsMobileMenuOpen}
-          />
-          {!isMobileMenuOpen && (
-            <div className="hidden md:flex">
-              <UserMenu
+<div className="flex items-center space-x-4">
+  {isLoggedIn && (
+    <>
+      <MessagesButton />
+      <button className="p-2 hover:bg-gray-100 rounded-full">
+        <Bell className="w-6 h-6 text-gray-600" />
+      </button>
+    </>
+  )}
+  <MenuToggle
+    isMobileMenuOpen={isMobileMenuOpen}
+    setIsMobileMenuOpen={setIsMobileMenuOpen}
+  />
+  {!isMobileMenuOpen && (
+    <div className="hidden md:flex">
+      <UserMenu
         isUserMenuOpen={isUserMenuOpen}
-        setIsUserMenuOpenAction={setIsUserMenuOpen}  // Changed from setIsUserMenuOpen
+        setIsUserMenuOpenAction={setIsUserMenuOpen}
         user={user}
         isLoggedIn={isLoggedIn}
-        onLogoutAction={handleLogout}  // Changed from onLogout
+        onLogoutAction={handleLogout}
       />
-            </div>
-          )}
-        </div>
+    </div>
+  )}
+</div>
       </div>
       <AnimatePresence>
         {isMobileMenuOpen && (

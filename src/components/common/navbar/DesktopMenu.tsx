@@ -1,3 +1,4 @@
+//src/components/common/navbar/DesktopMenu.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';

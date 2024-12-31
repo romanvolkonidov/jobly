@@ -6,6 +6,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { useRouter } from 'next/navigation';
 import { Slider } from '@/src/components/ui/slider';
+import TaskResponseModal from '@/src/components/common/modals/TaskResponseModal';
 
 interface TaskFilters {
   minBudget?: number;
@@ -41,6 +42,7 @@ export default function TaskSearchPage() {
   const [filters, setFilters] = useState<TaskFilters>({});
   const [budgetRange, setBudgetRange] = useState([0, 100000]);
   const { ref, inView } = useInView();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchTasks = async ({ pageParam = 1 }) => {
     const searchParams = new URLSearchParams({
@@ -96,6 +98,10 @@ export default function TaskSearchPage() {
       </div>
     );
   }
+
+  const handleResponse = (price: number, message: string) => {
+    console.log({ price, message });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

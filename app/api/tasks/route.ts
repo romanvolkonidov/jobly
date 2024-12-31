@@ -1,4 +1,5 @@
 // app/api/tasks/route.ts
+//this is the route that fetches all tasks
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
