@@ -8,26 +8,26 @@ import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
-  setIsUserMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsUserMenuOpenAction: React.Dispatch<React.SetStateAction<boolean>>;
   user: { imageUrl?: string | null; name?: string | null } | null;
   isLoggedIn: boolean;
-  onLogout: () => void; // Add this prop
+  onLogoutAction: () => void; // Add this prop
 }
 
 export function UserMenu({ 
   isUserMenuOpen, 
-  setIsUserMenuOpen, 
+  setIsUserMenuOpenAction, 
   user, 
   isLoggedIn,
-  onLogout 
+  onLogoutAction 
 }: UserMenuProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      onLogout(); // Call the callback to update parent state
-      setIsUserMenuOpen(false);
+      onLogoutAction(); // Call the callback to update parent state
+      setIsUserMenuOpenAction(false);
       router.push('/auth/login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -37,7 +37,7 @@ export function UserMenu({
   return (
     <div className="relative">
       <button
-        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+        onClick={() => setIsUserMenuOpenAction(!isUserMenuOpen)}
         className="flex items-center space-x-2"
       >
         {isLoggedIn ? (

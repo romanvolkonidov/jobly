@@ -58,7 +58,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="font-bold text-lg text-blue-600">
-            Jobly
+          Skill Spot
           </Link>
           <DesktopMenu isLoggedIn={isLoggedIn} />
         </div>
@@ -72,10 +72,10 @@ export default function Navbar() {
             <div className="hidden md:flex">
               <UserMenu
         isUserMenuOpen={isUserMenuOpen}
-        setIsUserMenuOpen={setIsUserMenuOpen}
+        setIsUserMenuOpenAction={setIsUserMenuOpen}  // Changed from setIsUserMenuOpen
         user={user}
         isLoggedIn={isLoggedIn}
-        onLogout={handleLogout} // Add this prop
+        onLogoutAction={handleLogout}  // Changed from onLogout
       />
             </div>
           )}
