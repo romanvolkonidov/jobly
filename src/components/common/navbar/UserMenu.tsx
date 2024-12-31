@@ -1,32 +1,64 @@
+'use client';
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
   setIsUserMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   user: { imageUrl?: string | null; name?: string | null } | null;
+  isLoggedIn: boolean;
+  onLogout: () => void; // Add this prop
 }
 
+export function UserMenu({ 
+  isUserMenuOpen, 
+  setIsUserMenuOpen, 
+  user, 
+  isLoggedIn,
+  onLogout 
+}: UserMenuProps) {
+  const router = useRouter();
 
-export function UserMenu({ isUserMenuOpen, setIsUserMenuOpen, user }: UserMenuProps) {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      onLogout(); // Call the callback to update parent state
+      setIsUserMenuOpen(false);
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <div className="relative">
       <button
         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
         className="flex items-center space-x-2"
       >
-        <Image
-          src={user?.imageUrl || '/default-avatar.png'}
-          alt="Profile"
-          width={40}
-          height={40}
-          className="rounded-full"
-        />
+        {isLoggedIn ? (
+          <Image
+            src={user?.imageUrl || '/default-avatar.png'}
+            alt="Profile"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+        ) : (
+          <Link
+            href="/auth/login"
+            className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Login
+          </Link>
+        )}
       </button>
 
-      {isUserMenuOpen && (
+      {isUserMenuOpen && isLoggedIn && (
         <div
           style={{
             backgroundColor: 'white',
@@ -47,12 +79,12 @@ export function UserMenu({ isUserMenuOpen, setIsUserMenuOpen, user }: UserMenuPr
           >
             <Settings className="h-4 w-4 mr-2" /> Settings
           </Link>
-          <Link
-            href="/auth/logout"
-            className="flex px-4 py-2 hover:bg-gray-100 items-center text-gray-700"
+          <button
+            onClick={handleLogout}
+            className="flex px-4 py-2 hover:bg-gray-100 items-center text-gray-700 w-full"
           >
             <LogOut className="h-4 w-4 mr-2" /> Logout
-          </Link>
+          </button>
         </div>
       )}
     </div>

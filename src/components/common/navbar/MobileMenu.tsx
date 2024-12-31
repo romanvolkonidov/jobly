@@ -9,10 +9,11 @@ interface MobileMenuProps {
     imageUrl?: string | null;
     name?: string | null;
   } | null;
+  isLoggedIn: boolean;
   closeAction: () => void;
 }
 
-export function MobileMenu({ user, closeAction }: MobileMenuProps) {
+export function MobileMenu({ user, isLoggedIn, closeAction }: MobileMenuProps) {
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
@@ -28,22 +29,35 @@ export function MobileMenu({ user, closeAction }: MobileMenuProps) {
       transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
       className="fixed inset-0 z-50 bg-white overflow-y-auto p-6"
     >
-      <div className="flex flex-col mb-6">
-        <div className="flex justify-between">
-          <div className="flex flex-col items-center w-20">
-            {user?.imageUrl ? (
-              <Image
-                src={user.imageUrl}
-                alt="User Profile Picture"
-                width={80}
-                height={80}
-                className="rounded-lg mb-2"
-              />
-            ) : (
-              <div className="w-20 h-20 bg-gray-300 rounded-lg mb-2" />
-            )}
-            <span className="text-lg font-semibold text-center whitespace-nowrap">{user?.name || 'User'}</span>
+      {isLoggedIn ? (
+        <div className="flex flex-col mb-6">
+          <div className="flex justify-between">
+            <div className="flex flex-col items-center w-20">
+              {user?.imageUrl ? (
+                <Image
+                  src={user.imageUrl}
+                  alt="User Profile Picture"
+                  width={80}
+                  height={80}
+                  className="rounded-lg mb-2"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gray-300 rounded-lg mb-2" />
+              )}
+              <span className="text-lg font-semibold text-center whitespace-nowrap">
+                {user?.name || 'User'}
+              </span>
+            </div>
+            <button
+              onClick={closeAction}
+              className="text-gray-600 hover:text-gray-900 focus:outline-none"
+            >
+              ✕
+            </button>
           </div>
+        </div>
+      ) : (
+        <div className="flex justify-end mb-6">
           <button
             onClick={closeAction}
             className="text-gray-600 hover:text-gray-900 focus:outline-none"
@@ -51,10 +65,10 @@ export function MobileMenu({ user, closeAction }: MobileMenuProps) {
             ✕
           </button>
         </div>
-      </div>
+      )}
 
       <nav className="space-y-3">
-        {/* Primary Actions */}
+        {/* Primary Actions - Always visible */}
         <div className="space-y-2">
           <button
             onClick={() => handleNavigation('/tasks')}
@@ -62,41 +76,53 @@ export function MobileMenu({ user, closeAction }: MobileMenuProps) {
           >
             Find Tasks
           </button>
+          
           <button
-            onClick={() => handleNavigation('/projects')}
-            className="block w-full p-4 text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
-          >
-            My Projects
-          </button>
-          <button
-            onClick={() => handleNavigation('/categories')}
+            onClick={() => handleNavigation('/tasks/post')}
             className="block w-full p-4 text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
           >
             Create a task
           </button>
         </div>
 
-        {/* Secondary Actions */}
-        <div className="space-y-2 pt-2 border-t border-gray-200">
-          <button
-            onClick={() => handleNavigation('/profile')}
-            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
-          >
-            Profile
-          </button>
-          <button
-            onClick={() => handleNavigation('/settings')}
-            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
-          >
-            Settings
-          </button>
-          <button
-            onClick={() => handleNavigation('/auth/logout')}
-            className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
-          >
-            Logout
-          </button>
-        </div>
+        {/* Conditional content based on login status */}
+        {isLoggedIn ? (
+          <div className="space-y-2 pt-2 border-t border-gray-200">
+            <button
+              onClick={() => handleNavigation('/projects')}
+              className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+            >
+              My Projects
+            </button>
+            <button
+              onClick={() => handleNavigation('/profile')}
+              className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+            >
+              Profile
+            </button>
+            <button
+              onClick={() => handleNavigation('/settings')}
+              className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => handleNavigation('/auth/logout')}
+              className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2 pt-2 border-t border-gray-200">
+            <button
+              onClick={() => handleNavigation('/auth/login')}
+              className="block w-full p-3 text-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-left"
+            >
+              Login
+            </button>
+          </div>
+        )}
       </nav>
     </motion.div>
   );

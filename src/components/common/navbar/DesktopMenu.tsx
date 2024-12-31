@@ -4,7 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { categories } from '@/src/data/categories';
 
-export function DesktopMenu() {
+interface DesktopMenuProps {
+  isLoggedIn: boolean; // Add this prop
+}
+
+export function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [menuTop, setMenuTop] = useState(0);
@@ -14,13 +18,11 @@ export function DesktopMenu() {
     if (hoveredCategory && categoryRef.current) {
       const rect = categoryRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      const menuHeight = viewportHeight - 80; // Assuming 80px for navbar
+      const menuHeight = viewportHeight - 80;
       const categoryTop = rect.top;
       
-      // Default position aligns with the category
       let newTop = 0;
       
-      // If category is too low and menu would extend below viewport
       if (categoryTop + menuHeight > viewportHeight) {
         newTop = viewportHeight - menuHeight - rect.top;
       }
@@ -35,9 +37,11 @@ export function DesktopMenu() {
         Find Tasks
       </Link>
       
-      <Link href="/projects" className="text-lg text-gray-700 hover:text-gray-900">
-        My Projects
-      </Link>
+      {isLoggedIn && ( // Only show My Projects when logged in
+        <Link href="/projects" className="text-lg text-gray-700 hover:text-gray-900">
+          My Projects
+        </Link>
+      )}
 
       <div
         className="relative"
@@ -62,17 +66,15 @@ export function DesktopMenu() {
                 <div className="px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                   {category.name}
                 </div>
-                {/* Invisible bridge */}
                 {hoveredCategory === category.name && (
                   <div className="absolute top-0 -right-6 h-full w-6" />
                 )}
-                {/* Fixed height subcategories menu */}
                 {hoveredCategory === category.name && (
                   <div 
                     className="absolute left-[calc(100%-1px)] bg-white shadow-md rounded-md w-48 z-20 overflow-hidden"
                     style={{
                       top: menuTop,
-                      height: 'calc(100vh - 80px)', // Viewport height minus navbar
+                      height: 'calc(100vh - 80px)',
                     }}
                   >
                     <div className="flex flex-col bg-white h-full overflow-y-auto">

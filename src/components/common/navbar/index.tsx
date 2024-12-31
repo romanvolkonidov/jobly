@@ -17,22 +17,41 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkSession = async () => {
       try {
-        const response = await fetch('/api/profile');
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        const userData = await response.json();
-        setUser(userData);
+        const sessionResponse = await fetch('/api/auth/check-session');
+        const sessionData = await sessionResponse.json();
+        setIsLoggedIn(sessionData.isLoggedIn);
+
+        if (sessionData.isLoggedIn) {
+          const userResponse = await fetch('/api/profile');
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUser(userData);
+          } else {
+            setUser(null);
+            setIsLoggedIn(false);
+          }
+        } else {
+          setUser(null);
+        }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        setUser(null); // Clear user data in case of an error
+        console.error('Error checking session:', error);
+        setUser(null);
+        setIsLoggedIn(false);
       }
     };
 
-    fetchUser();
-  }, []);
+    checkSession();
+  }, []); // Empty dependency array means this runs once when component mounts
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsLoggedIn(false);
+  };
 
   return (
     <nav className="fixed w-full top-0 z-50 bg-white border-b">
@@ -41,7 +60,7 @@ export default function Navbar() {
           <Link href="/" className="font-bold text-lg text-blue-600">
             Jobly
           </Link>
-          <DesktopMenu />
+          <DesktopMenu isLoggedIn={isLoggedIn} />
         </div>
 
         <div className="flex items-center space-x-4">
@@ -52,19 +71,22 @@ export default function Navbar() {
           {!isMobileMenuOpen && (
             <div className="hidden md:flex">
               <UserMenu
-                isUserMenuOpen={isUserMenuOpen}
-                setIsUserMenuOpen={setIsUserMenuOpen}
-                user={user} // Pass the dynamically fetched user state
-              />
+        isUserMenuOpen={isUserMenuOpen}
+        setIsUserMenuOpen={setIsUserMenuOpen}
+        user={user}
+        isLoggedIn={isLoggedIn}
+        onLogout={handleLogout} // Add this prop
+      />
             </div>
           )}
         </div>
       </div>
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <MobileMenu
-            user={user}
-            closeAction={() => setIsMobileMenuOpen(false)} // Corrected prop name
+          <MobileMenu 
+            user={user} 
+            isLoggedIn={isLoggedIn}
+            closeAction={() => setIsMobileMenuOpen(false)}
           />
         )}
       </AnimatePresence>
