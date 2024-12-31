@@ -1,24 +1,26 @@
-//this component is responsible for creating a bid for a task
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';
 import type { IronSessionData } from '@/src/types/session';
 
-export async function POST(req: Request, { params }: { params: { taskId: string } }) {
+export async function POST(
+  request: Request,
+) {
   try {
-    const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
+    const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { price, message } = await req.json();
+    const taskId = request.url.split('/tasks/')[1].split('/respond')[0];
+    const { price, message } = await request.json();
 
     const bid = await prisma.bid.create({
       data: {
         amount: price,
         proposal: message,
-        taskId: params.taskId,
+        taskId,
         userId: session.userId,
         status: 'pending'
       }
