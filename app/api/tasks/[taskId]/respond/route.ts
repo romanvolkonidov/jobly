@@ -1,34 +1,15 @@
+// /api/tasks/[taskId]/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import type { IronSessionData } from '@/src/types/session';
 
-export async function POST(
-  request: Request,
-) {
+export async function GET(request: Request) {
   try {
-    const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
-    if (!session.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const taskId = request.url.split('/tasks/')[1].split('/respond')[0];
-    const { price, message } = await request.json();
-
-    const bid = await prisma.bid.create({
-      data: {
-        amount: price,
-        proposal: message,
-        taskId,
-        userId: session.userId,
-        status: 'pending'
-      }
+    const taskId = request.url.split('/tasks/')[1];
+    const task = await prisma.task.findUnique({
+      where: { id: taskId }
     });
-
-    return NextResponse.json(bid);
+    return NextResponse.json(task);
   } catch (error) {
-    console.error('Error creating response:', error);
-    return NextResponse.json({ error: 'Failed to submit response' }, { status: 500 });
+    return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 }
