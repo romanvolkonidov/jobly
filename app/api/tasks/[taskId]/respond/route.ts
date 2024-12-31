@@ -3,11 +3,10 @@ import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';
 import type { IronSessionData } from '@/src/types/session';
-import type { NextRequest } from 'next/server';
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: Record<string, string> }
+  req: Request,
+  { params }: { params: { taskId: string } }
 ) {
   try {
     const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
