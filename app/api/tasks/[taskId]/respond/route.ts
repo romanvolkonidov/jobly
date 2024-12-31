@@ -7,10 +7,10 @@ import type { NextRequest } from 'next/server';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Record<string, string> }
+  context: { params: { taskId: string } }
 ) {
   try {
-    const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
+    const session = await getIronSession<IronSessionData>(req, sessionConfig);
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,7 +21,7 @@ export async function POST(
       data: {
         amount: price,
         proposal: message,
-        taskId: params.taskId,
+        taskId: context.params.taskId,
         userId: session.userId,
         status: 'pending'
       }
