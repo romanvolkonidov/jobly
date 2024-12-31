@@ -3,11 +3,10 @@ import { prisma } from '@/src/lib/prisma';
 import { cookies } from 'next/headers';
 import type { IronSessionData } from '@/src/types/session';
 
-type Props = {
-  params: { taskId: string }
-}
-
-export async function POST(req: NextRequest, props: Props) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { taskId: string } }
+) {
   try {
     const cookiesList = await cookies();
     const sessionCookie = cookiesList.get('session');
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest, props: Props) {
       data: {
         amount: price,
         proposal: message,
-        taskId: props.params.taskId,
+        taskId: params.taskId,
         userId: session.userId,
         status: 'pending'
       }
