@@ -1,15 +1,13 @@
-// app/api/profile/[userId]/route.ts
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params: { userId } }: { params: { userId: string } }
 ) {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: {
         name: true,
         imageUrl: true,
@@ -26,7 +24,7 @@ export async function GET(
     }
 
     return NextResponse.json(user);
-  } catch  {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
       { status: 500 }
