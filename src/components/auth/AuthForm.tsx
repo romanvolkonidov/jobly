@@ -1,12 +1,12 @@
 // src/components/auth/AuthForm.tsx
-//this file works in the following way: it renders the authentication form 
-'use client';
+"use client";
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
-import useAuthStore from '@/src/store/authStore';
+import Image from 'next/image';
+import { signIn } from "next-auth/react";
 
 interface FormData {
   name: string;
@@ -24,8 +24,6 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
-  const { setAuth } = useAuthStore();
-
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -35,34 +33,39 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    
     setLoading(true);
     setMessage('');
   
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       if (!csrfToken) throw new Error('CSRF token not found');
-  
-      const response = await fetch(`/api/auth/${formType}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed');
-      }
-  
+
       if (formType === 'register') {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
         setMessageType('success');
         setMessage('Please check your email to verify your account');
       } else {
-        setAuth(data.user); // Update auth store
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: formData.email,
+          password: formData.password
+        });
+
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+
         router.push('/');
       }
     } catch (error) {
@@ -71,7 +74,11 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
     } finally {
       setLoading(false);
     }
-  }, [formType, formData, loading, router, setAuth]);
+  }, [formType, formData, loading, router]);
+
+  const handleGoogleSignIn = () => {
+    signIn('google', { callbackUrl: '/' });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -147,18 +154,29 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
               disabled={loading}
               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading 
-                ? 'Please wait...' 
-                : formType === 'register' 
-                  ? 'Create Account' 
-                  : 'Sign In'}
+              {loading ? 'Please wait...' : formType === 'register' ? 'Create Account' : 'Sign In'}
             </button>
           </form>
 
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t"></span>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full bg-white text-gray-700 border border-gray-300 rounded-lg px-4 py-2 flex items-center justify-center gap-2"
+          >
+            <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
+            Continue with Google
+          </button>
+
           <p className="text-center text-sm text-gray-600">
-            {formType === 'register' 
-              ? 'Already have an account?' 
-              : "Don't have an account?"}{' '}
+            {formType === 'register' ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               onClick={() => {
                 if (loading) return;
@@ -172,8 +190,6 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
             >
               {formType === 'register' ? 'Sign In' : 'Create One'}
             </button>
-            
-            
           </p>
         </div>
       </Card>

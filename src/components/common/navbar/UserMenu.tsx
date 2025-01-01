@@ -1,5 +1,3 @@
-//src/components/common/navbar/UserMenu.tsx
-//this file works in the following way: it contains the user menu component
 'use client';
 
 import React from 'react';
@@ -7,33 +5,27 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
   setIsUserMenuOpenAction: React.Dispatch<React.SetStateAction<boolean>>;
-  user: { 
-    imageUrl?: string | null; 
-    name?: string | null; 
-  } | null;
-  isLoggedIn: boolean;
   onLogoutAction: () => void;
 }
 
 export function UserMenu({ 
   isUserMenuOpen, 
-  setIsUserMenuOpenAction, 
-  user, 
-  isLoggedIn,
+  setIsUserMenuOpenAction,
   onLogoutAction 
 }: UserMenuProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isLoggedIn = !!session;
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-        credentials: 'include'
-      });
+      await signOut({ redirect: false });
       onLogoutAction();
       setIsUserMenuOpenAction(false);
       router.push('/auth/login');
@@ -46,6 +38,10 @@ export function UserMenu({
     setIsUserMenuOpenAction(false);
   };
 
+  if (isLoading) {
+    return <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />;
+  }
+
   return (
     <div className="relative">
       <button
@@ -54,11 +50,12 @@ export function UserMenu({
       >
         {isLoggedIn ? (
           <Image
-            src={user?.imageUrl || '/default-avatar.png'}
+            src={session.user?.image || '/default-avatar.png'}
             alt="Profile"
             width={40}
             height={40}
             className="rounded-full"
+            priority
           />
         ) : (
           <Link

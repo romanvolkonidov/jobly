@@ -7,14 +7,15 @@ import ProfilePreviewModal from './ProfilePreviewModal';
 
 interface Message {
   id: string;
-  senderId: string;
-  senderName: string;
-  senderImageUrl?: string;
+  otherUserId: string;
+  otherUserName: string;
+  otherUserImage: string | null;
   taskId: string;
   taskTitle: string;
   lastMessage: string;
   timestamp: string;
 }
+
 
 interface MessageContent {
   id: string;
@@ -110,36 +111,21 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
   };
 
 // Update fetchMessages function in MessagesModal component
+// src/components/common/navbar/MessagesModal.tsx
+
+// In the fetchMessages function:
 const fetchMessages = async (conversationId: string) => {
   try {
     setMessagesLoading(true);
-    const limit = 50;
-    const offset = 0; // For initial load
-    
-    const response = await fetch(
-      `/api/messages/${conversationId}?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      }
-    );
-
+    const response = await fetch(`/api/messages/${conversationId}`);
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch messages');
-    }
-
-    if (!Array.isArray(data)) {
-      console.log('Unexpected messages data format:', data);
-      setMessages([]);
-      return;
-    }
-
-    setMessages(data);
+    
+    // Sort messages by timestamp, newest last
+    const sortedMessages = data.sort((a: MessageContent, b: MessageContent) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    
+    setMessages(sortedMessages);
   } catch (error) {
     console.error('Error fetching messages:', error);
     setMessages([]);
@@ -148,26 +134,50 @@ const fetchMessages = async (conversationId: string) => {
   }
 };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+// Also, after the messages are displayed, scroll to bottom:
+useEffect(() => {
+  const messageContainer = document.getElementById('message-container');
+  if (messageContainer) {
+    messageContainer.scrollTop = messageContainer.scrollHeight;
+  }
+}, [messages]);
 
-    try {
-      await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: selectedConversation,
-          content: newMessage
-        })
-      });
+// Add id to the messages container div:
 
-      setNewMessage('');
-      fetchMessages(selectedConversation);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
+
+// src/components/common/navbar/MessagesModal.tsx
+
+const handleSendMessage = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newMessage.trim() || !selectedConversation) return;
+
+  try {
+    const response = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: selectedConversation,
+        content: newMessage
+      })
+    });
+
+    const sentMessage = await response.json();
+    
+    // Add new message immediately to state
+    setMessages(prev => [...prev, {
+      id: sentMessage.id,
+      content: newMessage,
+      isSender: true,
+      timestamp: new Date().toISOString(),
+      fromUserId: sentMessage.fromUserId,
+      userImageUrl: sentMessage.userImageUrl
+    }]);
+
+    setNewMessage('');
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+};
 
   const handleProfileClick = (userId: string) => {
     setSelectedUserId(userId);
@@ -203,37 +213,39 @@ const fetchMessages = async (conversationId: string) => {
               <div className="flex items-center justify-center h-full p-4">
                 <p className="text-gray-500 text-center">No messages yet</p>
               </div>
-            ) : (
-              conversations.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => setSelectedConversation(conv.id)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 ${
-                    selectedConversation === conv.id ? 'bg-gray-50' : ''
-                  }`}
-                >
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={conv.senderImageUrl || '/default-avatar.png'}
-                    alt={conv.senderName}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleProfileClick(conv.senderId);
-                    }}
-                  />
-                  <div>
-                    <div className="font-medium">{conv.senderName}</div>
-                    <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {new Date(conv.timestamp).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )))}
+// Replace lines 207-246 with:
+) : (
+  conversations.map((conv) => (
+    <button
+      key={conv.id}
+      onClick={() => setSelectedConversation(conv.id)}
+      className={`w-full p-4 text-left hover:bg-gray-50 ${
+        selectedConversation === conv.id ? 'bg-gray-50' : ''
+      }`}
+    >
+      <div className="flex items-center gap-3">
+      <Image
+  src={conv.otherUserImage || '/default-avatar.png'}
+  alt={conv.otherUserName}
+  width={40}
+  height={40}
+  className="rounded-full object-cover cursor-pointer"
+  onClick={(e) => {
+    e.stopPropagation();
+    handleProfileClick(conv.otherUserId);
+  }}
+/>
+<div>
+  <div className="font-medium">{conv.otherUserName}</div>
+  <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
+  <div className="text-xs text-gray-400 mt-1">
+    {new Date(conv.timestamp).toLocaleDateString()}
+  </div>
+</div>
+      </div>
+    </button>
+  ))
+)}
           </div>
         </div>
 
@@ -252,8 +264,8 @@ const fetchMessages = async (conversationId: string) => {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messagesLoading ? (
+              <div id="message-container" className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messagesLoading ? (
                   <div className="space-y-4">
                     {[...Array(3)].map((_, index) => (
                       <div key={index} className="flex items-start gap-2">
@@ -275,14 +287,14 @@ const fetchMessages = async (conversationId: string) => {
                       key={msg.id}
                       className={`flex items-start gap-2 ${msg.isSender ? 'flex-row-reverse' : 'flex-row'}`}
                     >
-                      <Image
-                        src={msg.userImageUrl || '/default-avatar.png'}
-                        alt="User"
-                        width={32}
-                        height={32}
-                        className="rounded-full object-cover cursor-pointer"
-                        onClick={() => handleProfileClick(msg.fromUserId)}
-                      />
+<Image
+  src={msg.userImageUrl || '/default-avatar.png'}
+  alt="User"
+  width={32}
+  height={32}
+  className="rounded-full object-cover cursor-pointer"
+  onClick={() => handleProfileClick(msg.fromUserId)}
+/>
                       <div
                         className={`max-w-[70%] break-words rounded-xl px-4 py-2 ${
                           msg.isSender

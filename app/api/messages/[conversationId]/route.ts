@@ -1,3 +1,4 @@
+//app/api/messages/[conversationId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { cookies } from 'next/headers';
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         toUserId: true,
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'asc'  // Changed from 'desc' to 'asc'
       },
       take: limit,
       skip: offset,

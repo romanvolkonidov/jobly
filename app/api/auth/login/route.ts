@@ -10,34 +10,11 @@ import type { IronSessionData } from '@/src/types/session';
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
-    
-    // Validate input
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
-    }
-
-    console.log('Login attempt for:', email); // Add logging
-
     const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        name: true,
-        emailVerified: true
-      }
+      where: { email }
     });
 
-    if (!user) {
-      console.log('User not found');
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-    }
-
-    const isValid = await verifyPassword(password, user.password);
-    console.log('Password valid:', isValid);
-
-    if (!isValid) {
+    if (!user || !await verifyPassword(password, user.password)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -45,17 +22,20 @@ export async function POST(req: Request) {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified
+        name: user.name
       }
     });
 
     const session = await getIronSession<IronSessionData>(req, response, sessionConfig);
     session.userId = user.id;
+    session.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    };
     await session.save();
 
     return response;
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });

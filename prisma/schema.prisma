@@ -1,12 +1,10 @@
-//prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model User {
@@ -19,21 +17,21 @@ model User {
   resetToken        String?   @unique
   resetTokenExpiry  DateTime?
   imageUrl          String?
-  aboutMe           String?   @db.Text
+  aboutMe           String?
   location          String?
   isWorker          Boolean   @default(false)
   rating            Float?    @default(0)
-  reviewCount       Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   completedTasks    Int       @default(0)
-  tasks             Task[]    @relation("TaskCreator")
+  reviewCount       Int       @default(0)
+  taskRating        Float     @default(0)
+  portfolioImages   String[]  @default([])
+  portfolioVideo    String?
   bids              Bid[]     @relation("BidCreator")
   sentMessages      Message[] @relation("MessageSender")
   receivedMessages  Message[] @relation("MessageReceiver")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  taskRating        Float     @default(0)
-  portfolioImages String[]
-  portfolioVideo  String?
+  tasks             Task[]    @relation("TaskCreator")
 
   @@index([email])
   @@index([verificationToken])
@@ -43,18 +41,18 @@ model User {
 model Task {
   id          String    @id @default(cuid())
   title       String
-  description String    @db.Text
+  description String
   budget      Float?
   status      String    @default("open")
   location    String?
-  category    String?
-  subcategory String?
-  createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
   userId      String
-  bids        Bid[]     @relation("TaskBids")
-  messages    Message[] @relation("TaskMessages")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  category    String?
+  subcategory String?
+  bids        Bid[]     @relation("TaskBids")
+  messages    Message[] @relation("TaskMessages")
+  createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
 
   @@index([userId])
   @@index([category])
@@ -62,36 +60,36 @@ model Task {
 }
 
 model Bid {
-  id          String    @id @default(cuid())
-  amount      Float
-  proposal    String    @db.Text
-  status      String    @default("pending")
-  task        Task      @relation("TaskBids", fields: [taskId], references: [id])
-  taskId      String
-  createdBy   User      @relation("BidCreator", fields: [userId], references: [id])
-  userId      String
-  messages    Message[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  amount    Float
+  proposal  String
+  status    String    @default("pending")
+  taskId    String
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  task      Task      @relation("TaskBids", fields: [taskId], references: [id])
+  createdBy User      @relation("BidCreator", fields: [userId], references: [id])
+  messages  Message[]
 
   @@index([taskId])
   @@index([userId])
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  content     String   @db.Text
-  from        User     @relation("MessageSender", fields: [fromUserId], references: [id])
-  fromUserId  String
-  to          User     @relation("MessageReceiver", fields: [toUserId], references: [id])
-  toUserId    String
-  task        Task     @relation("TaskMessages", fields: [taskId], references: [id])
-  taskId      String
-  bid         Bid?     @relation(fields: [bidId], references: [id])
-  bidId       String?
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  content    String
+  fromUserId String
+  toUserId   String
+  taskId     String
+  bidId      String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bid        Bid?     @relation(fields: [bidId], references: [id])
+  from       User     @relation("MessageSender", fields: [fromUserId], references: [id])
+  task       Task     @relation("TaskMessages", fields: [taskId], references: [id])
+  to         User     @relation("MessageReceiver", fields: [toUserId], references: [id])
 
   @@index([fromUserId])
   @@index([toUserId])
@@ -100,14 +98,14 @@ model Message {
 }
 
 model Review {
-  id          String   @id @default(cuid())
-  rating      Float
-  comment     String?  @db.Text
-  fromUserId  String
-  toUserId    String
-  taskId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  rating     Float
+  comment    String?
+  fromUserId String
+  toUserId   String
+  taskId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([fromUserId])
   @@index([toUserId])

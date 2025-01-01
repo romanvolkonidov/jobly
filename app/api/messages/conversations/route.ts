@@ -32,21 +32,21 @@ export async function GET(request: Request) {
       select: {
         id: true,
         title: true,
+        createdAt: true,
+        userId: true, // Add this
         createdBy: {
           select: {
             id: true,
             name: true,
             imageUrl: true,
-          }
+          },
         },
         bids: {
-          where: {
-            userId: session.userId
-          },
           select: {
             userId: true,
             createdBy: {
               select: {
+                id: true,
                 name: true,
                 imageUrl: true
               }
@@ -54,9 +54,7 @@ export async function GET(request: Request) {
           }
         },
         messages: {
-          orderBy: {
-            createdAt: 'desc'
-          },
+          orderBy: { createdAt: 'desc' },
           take: 1,
           select: {
             content: true,
@@ -68,23 +66,33 @@ export async function GET(request: Request) {
 
     console.log('Found tasks:', tasks);
 
-    // Format the data
-    const conversations = tasks.map(task => {
-      const lastMessage = task.messages[0];
-      const isCreator = task.createdBy.id === session.userId;
-      const bid = task.bids[0];
-      
-      return {
-        id: task.id,
-        senderId: isCreator ? bid?.userId : task.createdBy.id,
-        senderName: isCreator ? bid?.createdBy.name : task.createdBy.name,
-        senderImageUrl: isCreator ? bid?.createdBy.imageUrl : task.createdBy.imageUrl,
-        taskId: task.id,
-        taskTitle: task.title,
-        lastMessage: lastMessage?.content || 'No messages yet',
-        timestamp: lastMessage?.createdAt || new Date(),
-      };
-    });
+
+// app/api/messages/conversations/route.ts
+
+const conversations = tasks.map(task => {
+  const lastMessage = task.messages[0];
+  // Get all bids for this task that aren't from current user
+  const otherUserBid = task.bids.find(bid => bid.userId !== session.userId);
+  
+  const otherUser = task.userId === session.userId 
+    ? otherUserBid?.createdBy  // If I created task, show bidder
+    : task.createdBy;          // If I'm bidder, show task creator
+
+  if (!otherUser) {
+    console.log('Missing other user for task:', task.id);
+  }
+
+  return {
+    id: task.id,
+    otherUserId: otherUser?.id ?? "",
+    otherUserName: otherUser?.name ?? "Unknown User",
+    otherUserImage: otherUser?.imageUrl,
+    taskId: task.id,
+    taskTitle: task.title,
+    lastMessage: lastMessage?.content ?? 'No messages yet',
+    timestamp: lastMessage?.createdAt ?? task.createdAt
+  };
+});
 
     console.log('Formatted conversations:', conversations);
     return NextResponse.json(conversations);

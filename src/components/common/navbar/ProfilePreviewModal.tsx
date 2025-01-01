@@ -25,20 +25,24 @@ const ProfilePreviewModal = ({ userId, isOpen, onClose }: ProfilePreviewModalPro
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfileData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`/api/profile/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch profile data');
-      const data = await response.json();
-      setProfileData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+// src/components/common/navbar/ProfilePreviewModal.tsx
+
+const fetchProfileData = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    const response = await fetch(`/api/profile/${userId}`, {
+      credentials: 'include' // Add this line
+    });
+    if (!response.ok) throw new Error('Failed to fetch profile data');
+    const data = await response.json();
+    setProfileData(data);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Failed to load profile');
+  } finally {
+    setLoading(false);
+  }
+}, [userId]);
 
   useEffect(() => {
     if (isOpen && userId) {

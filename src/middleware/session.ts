@@ -12,7 +12,8 @@ export const sessionConfig = {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax' as const,
-    maxAge: 24 * 60 * 60 // 24 hours
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 // 7 days
   }
 } as const;
 

@@ -4,14 +4,17 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 
-const sessionConfig = {
+export const sessionConfig = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'jobly_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60,
-  },
-};
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 // 7 days in seconds
+  }
+} as const;
 
 export async function POST() {
 // app/api/auth/logout/route.ts

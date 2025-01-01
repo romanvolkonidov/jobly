@@ -1,4 +1,3 @@
-// app/profile/page.tsx
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -23,26 +22,39 @@ function ProfileContent() {
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
   }, []);
 
+  // Add this to your page components that require authentication
+useEffect(() => {
+  const checkSession = async () => {
+    const res = await fetch('/api/auth/check-session');
+    const data = await res.json();
+    if (!data.isLoggedIn) {
+      // Redirect to login
+      window.location.href = '/auth/login';
+    }
+  };
+  checkSession();
+}, []);
+
   const fetchUserData = async () => {
     try {
-      const response = await fetch('/api/profile', {
-        credentials: 'include',
-      });
-      
+      setIsLoading(true);
+      const response = await fetch('/api/profile', { credentials: 'include' });
+
       if (!response.ok) throw new Error('Failed to fetch profile data');
-      
+
       const data = await response.json();
       setUser(data);
       setAboutMe(data.aboutMe || '');
       setImageUrl(data.imageUrl || '');
       setPortfolioImages(data.portfolioImages || []);
       setPortfolioVideo(data.portfolioVideo || null);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -77,87 +89,67 @@ function ProfileContent() {
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
-        credentials: 'include'
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to upload image');
 
       const data = await response.json();
-      
+
       if (type === 'profile') {
         setImageUrl(data.imageUrl);
+        setUser((prevUser) => (prevUser ? { ...prevUser, imageUrl: data.imageUrl } : prevUser));
       } else {
-        setPortfolioImages(prev => [...prev, data.imageUrl]);
+        setPortfolioImages((prev) => [...prev, data.imageUrl]);
       }
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     try {
       setUploadError(null);
-      console.log('Starting video upload, file:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
-  
+
       if (file.size > MAX_VIDEO_SIZE) {
         setUploadError('Video must be less than 100MB');
         return;
       }
-  
+
       const video = document.createElement('video');
       video.preload = 'metadata';
-  
+
       const videoURL = URL.createObjectURL(file);
       video.src = videoURL;
-  
-      try {
-        const checkDuration = new Promise((resolve, reject) => {
-          video.onloadedmetadata = () => resolve(video.duration);
-          video.onerror = (e) => reject(`Error loading video: ${e}`);
-        });
-  
-        const duration = await checkDuration as number;
-        console.log('Video duration:', duration);
-        
-        if (duration > MAX_VIDEO_DURATION) {
-          setUploadError('Video must be no longer than 2 minutes');
-          return;
-        }
-  
-        const formData = new FormData();
-        formData.append('video', file);
-  
-        console.log('Sending video to server...');
-        const response = await fetch('/api/upload/video', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include'
-        });
-  
-        console.log('Server response status:', response.status);
-        const data = await response.json();
-        
-        if (!response.ok) {
-          console.error('Server error:', data);
-          throw new Error(data.error || 'Failed to upload video');
-        }
-  
-        console.log('Upload successful:', data);
-        setPortfolioVideo(data.videoUrl);
-      } finally {
-        URL.revokeObjectURL(videoURL);
+
+      const duration = await new Promise<number>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve(video.duration);
+        video.onerror = () => reject(new Error('Error loading video'));
+      });
+
+      if (duration > MAX_VIDEO_DURATION) {
+        setUploadError('Video must be no longer than 2 minutes');
+        return;
       }
-    } catch (error) {
-      console.error('Video upload error:', error);
-      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+
+      const formData = new FormData();
+      formData.append('video', file);
+
+      const response = await fetch('/api/upload/video', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) throw new Error('Failed to upload video');
+
+      const data = await response.json();
+      setPortfolioVideo(data.videoUrl);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
   };
 
@@ -167,12 +159,11 @@ function ProfileContent() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl }),
-        credentials: 'include'
+        credentials: 'include',
       });
-      
-      setPortfolioImages(prev => prev.filter(img => img !== imageUrl));
-    } catch (error) {
-      console.error('Error removing image:', error);
+
+      setPortfolioImages((prev) => prev.filter((img) => img !== imageUrl));
+    } catch {
       setUploadError('Failed to remove image');
     }
   };
@@ -181,12 +172,11 @@ function ProfileContent() {
     try {
       await fetch('/api/profile/portfolio-video', {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
       });
-      
+
       setPortfolioVideo(null);
-    } catch (error) {
-      console.error('Error removing video:', error);
+    } catch  {
       setUploadError('Failed to remove video');
     }
   };
@@ -197,14 +187,13 @@ function ProfileContent() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ aboutMe }),
-        credentials: 'include'
+        credentials: 'include',
       });
-      
+
       if (!response.ok) throw new Error('Failed to update profile');
-      
+
       setEditingAbout(false);
-    } catch (error) {
-      console.error('Error updating about me:', error);
+    } catch  {
       setError('Failed to update profile');
     }
   };
@@ -227,20 +216,8 @@ function ProfileContent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <ProfileHeader
-        user={user}
-        imageUrl={imageUrl}
-        onImageUpload={handleImageUpload}
-      />
-      
-      <AboutSection
-        aboutMe={aboutMe}
-        editingAbout={editingAbout}
-        setEditingAbout={setEditingAbout}
-        setAboutMe={setAboutMe}
-        onSubmit={handleAboutMeSubmit}
-      />
-      
+      <ProfileHeader user={user} imageUrl={imageUrl} onImageUpload={handleImageUpload} />
+      <AboutSection aboutMe={aboutMe} editingAbout={editingAbout} setEditingAbout={setEditingAbout} setAboutMe={setAboutMe} onSubmit={handleAboutMeSubmit} />
       <PortfolioSection
         portfolioImages={portfolioImages}
         portfolioVideo={portfolioVideo}
@@ -256,7 +233,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="flex justify-center items-center min-h-screen">
           <div className="animate-pulse text-gray-600">Loading profile...</div>

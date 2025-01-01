@@ -33,6 +33,10 @@ const nextConfig = {
     const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
     return [
       {
+        source: '/:path*',
+        destination: `http://dev-skillspot.com:3000/:path*`,
+      },
+      {
         source: '/api/v1/:path*',
         destination: `${API_BASE_URL}/api/v1/:path*`,
       },

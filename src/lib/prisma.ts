@@ -1,6 +1,5 @@
-//src/components/lib/prisma.ts
-//this file works in the following way: it exports the prisma client
-import { PrismaClient } from "@prisma/client";
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
 
 declare global {
   // Prevent variable redeclaration in development
@@ -11,10 +10,10 @@ declare global {
 const prisma =
   global.prisma ||
   new PrismaClient({
-    log: ["query"], // Log database queries (optional)
+    log: ['query'], // Log database queries (optional)
   });
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma; // Cache the PrismaClient instance in development
 }
 

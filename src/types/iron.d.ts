@@ -9,3 +9,4 @@ declare module 'iron-session' {
     role?: string; // Optional role field for role-based access control (e.g., "admin", "user")
   }
 }
+

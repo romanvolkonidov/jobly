@@ -1,5 +1,3 @@
-// src/components/common/navbar/index.tsx
-//this file works in the following way: it contains the navbar for the app
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,22 +17,29 @@ function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, isAuthenticated, isLoading, setAuth, logout } = useAuthStore();
 
+  // Logout handler
   const handleLogout = useCallback(() => {
     logout();
   }, [logout]);
 
+  // Check session and fetch user data
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const sessionResponse = await fetch('/api/auth/check-session');
+        const sessionResponse = await fetch('/api/auth/check-session', {
+          credentials: 'include',
+        });
         const sessionData = await sessionResponse.json();
 
         if (sessionData.isLoggedIn) {
-          const userResponse = await fetch('/api/profile');
+          const userResponse = await fetch('/api/profile', {
+            credentials: 'include',
+          });
           if (userResponse.ok) {
             const userData = await userResponse.json();
             setAuth(userData);
           } else {
+            console.error('Failed to fetch user data');
             logout();
           }
         } else {
@@ -49,13 +54,19 @@ function Navbar() {
     checkSession();
   }, [setAuth, logout]);
 
+  // Handle loading state
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-16 bg-white border-b">
+        <span className="text-gray-600">Loading...</span>
+      </div>
+    );
   }
 
   return (
     <nav className="fixed w-full top-0 z-50 bg-white border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+        {/* Left: Logo and Desktop Menu */}
         <div className="flex items-center space-x-4">
           <Link href="/" className="font-bold text-lg text-blue-600">
             Skill Spot
@@ -63,6 +74,7 @@ function Navbar() {
           <DesktopMenu isLoggedIn={isAuthenticated} />
         </div>
 
+        {/* Right: Notifications, User Menu, Mobile Menu Toggle */}
         <div className="flex items-center space-x-4">
           {isAuthenticated && (
             <>
@@ -89,10 +101,11 @@ function Navbar() {
           )}
         </div>
       </div>
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <MobileMenu 
-            user={user} 
+          <MobileMenu
+            user={user}
             isLoggedIn={isAuthenticated}
             closeAction={() => setIsMobileMenuOpen(false)}
           />

@@ -2,7 +2,7 @@
 //this file works in the following way: it renders the settings page
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 
@@ -11,6 +11,19 @@ function SettingsContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Add this to your page components that require authentication
+useEffect(() => {
+  const checkSession = async () => {
+    const res = await fetch('/api/auth/check-session');
+    const data = await res.json();
+    if (!data.isLoggedIn) {
+      // Redirect to login
+      window.location.href = '/auth/login';
+    }
+  };
+  checkSession();
+}, []);
 
   const handleDeleteAccount = async () => {
     try {
