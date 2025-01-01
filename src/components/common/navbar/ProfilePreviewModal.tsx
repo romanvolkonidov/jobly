@@ -1,8 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { VideoPlayer } from '@/src/components/profile/VideoPlayer';
 import Image from 'next/image';
 import Link from 'next/link';
+
+interface ProfileData {
+  imageUrl: string;
+  name: string;
+  rating?: number;
+  reviewCount: number;
+  aboutMe?: string;
+  portfolioImages?: string[];
+  portfolioVideo?: string;
+}
 
 interface ProfilePreviewModalProps {
   userId: string;
@@ -11,17 +21,11 @@ interface ProfilePreviewModalProps {
 }
 
 const ProfilePreviewModal = ({ userId, isOpen, onClose }: ProfilePreviewModalProps) => {
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchProfileData();
-    }
-  }, [isOpen, userId]);
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -34,7 +38,13 @@ const ProfilePreviewModal = ({ userId, isOpen, onClose }: ProfilePreviewModalPro
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchProfileData();
+    }
+  }, [isOpen, userId, fetchProfileData]);
 
   if (!isOpen) return null;
 
@@ -86,11 +96,11 @@ const ProfilePreviewModal = ({ userId, isOpen, onClose }: ProfilePreviewModalPro
               )}
 
               {/* Portfolio Images */}
-              {profileData.portfolioImages?.length > 0 && (
+              {(profileData.portfolioImages ?? []).length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Portfolio</h4>
                   <div className="grid grid-cols-3 gap-2">
-                    {profileData.portfolioImages.map((img: string, index: number) => (
+                    {(profileData.portfolioImages ?? []).map((img: string, index: number) => (
                       <div key={index} className="aspect-square relative">
                         <Image
                           src={img}
