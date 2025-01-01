@@ -6,17 +6,19 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { withLazyLoading } from '@/src/components/common/Performance';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
   setIsUserMenuOpenAction: React.Dispatch<React.SetStateAction<boolean>>;
-  user: { imageUrl?: string | null; name?: string | null } | null;
+  user: { 
+    imageUrl?: string | null; 
+    name?: string | null; 
+  } | null;
   isLoggedIn: boolean;
-  onLogoutAction: () => void; // Add this prop
+  onLogoutAction: () => void;
 }
 
-function UserMenu({ 
+export function UserMenu({ 
   isUserMenuOpen, 
   setIsUserMenuOpenAction, 
   user, 
@@ -27,13 +29,20 @@ function UserMenu({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      onLogoutAction(); // Call the callback to update parent state
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
+      onLogoutAction();
       setIsUserMenuOpenAction(false);
       router.push('/auth/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  const handleMenuClick = () => {
+    setIsUserMenuOpenAction(false);
   };
 
   return (
@@ -61,29 +70,24 @@ function UserMenu({
       </button>
 
       {isUserMenuOpen && isLoggedIn && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-            borderRadius: '8px',
-          }}
-          className="absolute right-0 mt-2 w-48 py-2 z-50"
-        >
+        <div className="absolute right-0 mt-2 w-48 py-2 z-50 bg-white rounded-lg shadow-lg border border-gray-100">
           <Link
             href="/profile"
-            className="flex px-4 py-2 hover:bg-gray-100 items-center text-gray-700"
+            onClick={handleMenuClick}
+            className="flex px-4 py-2 hover:bg-gray-50 items-center text-gray-700 transition-colors"
           >
             <User className="h-4 w-4 mr-2" /> Profile
           </Link>
           <Link
             href="/settings"
-            className="flex px-4 py-2 hover:bg-gray-100 items-center text-gray-700"
+            onClick={handleMenuClick}
+            className="flex px-4 py-2 hover:bg-gray-50 items-center text-gray-700 transition-colors"
           >
             <Settings className="h-4 w-4 mr-2" /> Settings
           </Link>
           <button
             onClick={handleLogout}
-            className="flex px-4 py-2 hover:bg-gray-100 items-center text-gray-700 w-full"
+            className="flex w-full px-4 py-2 hover:bg-gray-50 items-center text-gray-700 transition-colors"
           >
             <LogOut className="h-4 w-4 mr-2" /> Logout
           </button>
@@ -93,4 +97,4 @@ function UserMenu({
   );
 }
 
-export default withLazyLoading(UserMenu);
+export default UserMenu;

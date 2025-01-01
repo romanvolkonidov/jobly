@@ -1,6 +1,7 @@
 //src/components/home/hero/index.tsx
 'use client';
 
+import { useRouter } from 'next/navigation'; // Add this import
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import {  withLazyLoading } from '@/src/components/common/Performance';
@@ -13,6 +14,8 @@ const searchPlaceholders = [
 ];
 
 function HeroSection() {
+  const router = useRouter(); // Add this line
+
   const [searchQuery, setSearchQuery] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -26,10 +29,20 @@ function HeroSection() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
-  };
+// src/components/home/hero/index.tsx
+
+const handleSearch = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (searchQuery.trim()) {
+    // Store the search query in localStorage first
+    localStorage.setItem('taskData', JSON.stringify({
+      name: searchQuery
+    }));
+    
+    // Use the default or most general subcategory
+    router.push('/create-task/other-services');
+  }
+};
 
   return (
     <div className="relative min-h-[80vh] bg-gradient-to-b from-gray-50 to-white">

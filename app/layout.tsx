@@ -5,6 +5,7 @@ import "./globals.css";
 import { generateCsrfToken } from '@/src/middleware/csrf';
 import Navbar from '@/src/components/common/navbar/index';
 import { Providers } from './providers';
+import { Suspense } from 'react';
 
 const geistSans = Geist({
   variable: "--font-geist-sans", 
@@ -36,7 +37,15 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Navbar />
-          <main className="pt-16">{children}</main>
+          <main className="pt-16">
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="animate-pulse text-gray-600">Loading...</div>
+              </div>
+            }>
+              {children}
+            </Suspense>
+          </main>
         </Providers>
       </body>
     </html>

@@ -1,31 +1,51 @@
-//app/create-task/%5Bsubcategory%5D/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function CreateTaskPage() {
   const params = useParams();
   const router = useRouter();
-  const subcategory = decodeURIComponent(params.subcategory as string).replace(/-/g, ' ');
+  const [loading, setLoading] = useState(true);
   const [taskName, setTaskName] = useState('');
   const [error, setError] = useState('');
+  const subcategory = decodeURIComponent(params.subcategory as string).replace(/-/g, ' ');
 
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    // Check if we have a pre-filled task name from search
+    const existingTaskData = JSON.parse(localStorage.getItem('taskData') || '{}');
+    if (existingTaskData.name) {
+      setTaskName(existingTaskData.name);
+    }
+    setLoading(false);
+  }, []);
+  
   const handleContinue = () => {
     if (!taskName.trim()) {
       setError('Please enter a task name');
       return;
     }
     
-    // Store task data in localStorage for now
+    setLoading(true);
     localStorage.setItem('taskData', JSON.stringify({
       name: taskName,
       subcategory
     }));
     
-    // Navigate to details page
     router.push('/create-task/details');
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 flex items-center justify-center min-h-[50vh]">
+        <div className="animate-pulse text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">

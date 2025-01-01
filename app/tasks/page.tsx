@@ -27,7 +27,7 @@ interface Task {
   bids: Array<{ id: string }>;
 }
 
-interface TaskResponse {
+interface PaginatedResponse {
   tasks: Task[];
   pagination: {
     total: number;
@@ -35,6 +35,18 @@ interface TaskResponse {
     currentPage: number;
   };
 }
+
+const TaskSkeleton = () => (
+  <div className="space-y-4">
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
+        <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    ))}
+  </div>
+);
 
 export default function TaskSearchPage() {
   const router = useRouter();
@@ -44,21 +56,36 @@ export default function TaskSearchPage() {
   const { ref, inView } = useInView();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchTasks = useCallback(async ({ pageParam = 1 }) => {
-    const searchParams = new URLSearchParams({
-      page: pageParam.toString(),
-      limit: '10',
-      ...filters,
-      minBudget: budgetRange[0].toString(),
-      maxBudget: budgetRange[1].toString(),
-    });
+  const handleTaskClick = useCallback((taskId: string) => {
+    router.push(`/tasks/${taskId}`);
+  }, [router]); // Empty dependency array since router is stable
 
-    const endpoint =
-      activeTab === 'all' ? '/api/tasks' : '/api/tasks/recommended';
-    const response = await fetch(`${endpoint}?${searchParams}`);
-    if (!response.ok) throw new Error('Failed to fetch tasks');
-    return response.json();
-  }, [activeTab, filters, budgetRange]);
+  const fetchTasks = useCallback(async ({ pageParam = 1 }) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const searchParams = new URLSearchParams({
+        page: pageParam.toString(),
+        limit: '10',
+        ...filters,
+        minBudget: budgetRange[0].toString(),
+        maxBudget: budgetRange[1].toString(),
+      });
+
+      const response = await fetch(`/api/tasks?${searchParams}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error('Failed to fetch tasks');
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }, [filters, budgetRange]);
 
   const {
     data,
@@ -67,12 +94,12 @@ export default function TaskSearchPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
+    error
   } = useInfiniteQuery({
     queryKey: ['tasks', activeTab, filters, budgetRange],
     queryFn: fetchTasks,
     initialPageParam: 1,
-    getNextPageParam: (lastPage: TaskResponse) =>
+    getNextPageParam: (lastPage: PaginatedResponse) =>
       lastPage.pagination?.currentPage < lastPage.pagination?.pages
         ? lastPage.pagination.currentPage + 1
         : undefined,
@@ -84,13 +111,6 @@ export default function TaskSearchPage() {
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleTaskClick = useCallback(
-    (taskId: string) => {
-      router.push(`/tasks/${taskId}`);
-    },
-    [router]
-  );
-
   const toggleModal = () => setIsModalOpen((prev) => !prev);
 
   const handleResponse = (price: number, message: string) => {
@@ -98,19 +118,33 @@ export default function TaskSearchPage() {
     setIsModalOpen(false);
   };
 
-  if (isError) {
+  // Show loading state
+  if (isLoading) {
     return (
-      <div className="text-center py-8 text-red-600">
-        <p>Error: {(error as Error).message}</p>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <TaskSkeleton />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isError && error instanceof Error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 text-center">
+        <p className="text-red-600 mb-4">Error loading tasks: {error.message}</p>
         <button
           onClick={() => fetchNextPage()}
-          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Retry
         </button>
       </div>
     );
   }
+
+
+
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

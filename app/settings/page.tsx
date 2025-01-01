@@ -1,28 +1,39 @@
-// app/settings/page.tsx
+//app/settings/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleDeleteAccount = async () => {
     try {
+      setIsDeleting(true);
+      setError(null);
+      
       const response = await fetch('/api/profile/delete', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
+        credentials: 'include'
       });
 
-      if (response.ok) {
-        router.push('/auth/logout');
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
       }
+
+      router.push('/auth/logout');
     } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete account');
       console.error('Error deleting account:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -33,28 +44,36 @@ export default function SettingsPage() {
       <Card className="p-6">
         <h2 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">
+            {error}
+          </div>
+        )}
+
         {!showConfirm ? (
           <button
             onClick={() => setShowConfirm(true)}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
           >
             Delete Account
           </button>
         ) : (
           <div className="space-y-4">
             <p className="text-gray-700">
-              Are you sure? This cannot be undone.
+              Are you sure? This action cannot be undone. All your data will be permanently deleted.
             </p>
             <div className="space-x-4">
               <button
                 onClick={handleDeleteAccount}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                disabled={isDeleting}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Yes, Delete My Account
+                {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
               </button>
               <button
                 onClick={() => setShowConfirm(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                disabled={isDeleting}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
@@ -63,5 +82,19 @@ export default function SettingsPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-pulse text-gray-600">Loading settings...</div>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }

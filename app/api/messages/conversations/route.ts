@@ -1,5 +1,4 @@
 // app/api/messages/conversations/route.ts
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
@@ -27,6 +26,14 @@ export async function GET(request: Request) {
       include: {
         from: {
           select: {
+            id: true,
+            name: true,
+            imageUrl: true
+          }
+        },
+        to: {
+          select: {
+            id: true,
             name: true,
             imageUrl: true
           }
@@ -41,16 +48,21 @@ export async function GET(request: Request) {
       distinct: ['taskId']
     });
     
-    const formattedConversations = conversations.map(conv => ({
-      id: conv.taskId,
-      senderId: conv.fromUserId,
-      senderName: conv.from.name,
-      senderImageUrl: conv.from.imageUrl,
-      taskId: conv.taskId,
-      taskTitle: conv.task.title,
-      lastMessage: conv.content,
-      timestamp: conv.createdAt
-    }));
+    const formattedConversations = conversations.map(conv => {
+      // Determine if the 'other' person is the sender or receiver
+      const otherUser = conv.fromUserId === session.userId ? conv.to : conv.from;
+      
+      return {
+        id: conv.taskId,
+        senderId: otherUser.id,
+        senderName: otherUser.name,
+        senderImageUrl: otherUser.imageUrl,
+        taskId: conv.taskId,
+        taskTitle: conv.task.title,
+        lastMessage: conv.content,
+        timestamp: conv.createdAt
+      };
+    });
 
     return NextResponse.json(formattedConversations);
   } catch (error) {

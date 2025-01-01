@@ -6,6 +6,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
+import useAuthStore from '@/src/store/authStore';
 
 interface FormData {
   name: string;
@@ -23,6 +24,8 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+  const { setAuth } = useAuthStore();
+
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -35,11 +38,11 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
     
     setLoading(true);
     setMessage('');
-
+  
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       if (!csrfToken) throw new Error('CSRF token not found');
-
+  
       const response = await fetch(`/api/auth/${formType}`, {
         method: 'POST',
         headers: {
@@ -50,15 +53,16 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
       });
       
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.message || 'Authentication failed');
       }
-
+  
       if (formType === 'register') {
         setMessageType('success');
         setMessage('Please check your email to verify your account');
       } else {
+        setAuth(data.user); // Update auth store
         router.push('/');
       }
     } catch (error) {
@@ -67,7 +71,7 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
     } finally {
       setLoading(false);
     }
-  }, [formType, formData, loading, router]);
+  }, [formType, formData, loading, router, setAuth]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -168,6 +172,8 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
             >
               {formType === 'register' ? 'Sign In' : 'Create One'}
             </button>
+            
+            
           </p>
         </div>
       </Card>

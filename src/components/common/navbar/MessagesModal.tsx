@@ -26,11 +26,12 @@ interface MessageContent {
 interface MessagesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onMessagesRead: () => void;
   initialTaskId?: string;
 }
 
-function MessagesModal({ isOpen, onClose, initialTaskId }: MessagesModalProps) {
-  const [conversations, setConversations] = useState<Message[]>([]);
+function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: MessagesModalProps) {
+      const [conversations, setConversations] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageContent[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -53,6 +54,29 @@ function MessagesModal({ isOpen, onClose, initialTaskId }: MessagesModalProps) {
     }
   }, [selectedConversation]);
 
+  useEffect(() => {
+    if (selectedConversation) {
+      const markMessagesAsRead = async () => {
+        try {
+          await fetch('/api/messages/mark-read', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              conversationId: selectedConversation,
+            }),
+          });
+          onMessagesRead(); // Call this after successfully marking messages as read
+        } catch (error) {
+          console.error('Error marking messages as read:', error);
+        }
+      };
+  
+      markMessagesAsRead();
+    }
+  }, [selectedConversation, onMessagesRead]);
+  
   const fetchConversations = async () => {
     try {
       const response = await fetch('/api/messages/conversations');
