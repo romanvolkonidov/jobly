@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 
-export const sessionConfig = {
+ const sessionConfig = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'jobly_session',
   cookieOptions: {
