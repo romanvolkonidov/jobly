@@ -1,13 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    APP_NAME: process.env.APP_NAME || 'Jobly',
-    API_VERSION: process.env.API_VERSION || 'v1',
-    ENABLE_PAYMENTS: process.env.ENABLE_PAYMENTS || 'false',
-    ENABLE_REALTIME: process.env.ENABLE_REALTIME || 'false',
-    ENABLE_NOTIFICATIONS: process.env.ENABLE_NOTIFICATIONS || 'false',
-  },
-
   output: 'standalone',
 
   images: {
@@ -21,9 +13,7 @@ const nextConfig = {
   },
 
   experimental: {
-    optimizeCss: true,
-    modern: true,
-    optimizeFonts: true,
+    optimizeCss: true, // Valid key for optimizing CSS
   },
 
   compiler: {
@@ -48,7 +38,7 @@ const nextConfig = {
       },
       {
         source: '/ws',
-        destination: 'http://localhost:8080/ws',
+        destination: process.env.WS_URL || 'http://localhost:8080/ws',
       },
     ];
   },
@@ -74,10 +64,7 @@ const nextConfig = {
         ],
       },
     ];
-  }
-  
-  
-  
+  },
 };
 
 module.exports = nextConfig;
