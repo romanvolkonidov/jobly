@@ -5,7 +5,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
-import Image from 'next/image';
+//import Image from 'next/image';
 import { signIn } from "next-auth/react";
 
 interface FormData {
@@ -76,9 +76,9 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
     }
   }, [formType, formData, loading, router]);
 
-  const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/' });
-  };
+  //const handleGoogleSignIn = () => {
+    //signIn('google', { callbackUrl: '/' });
+  //};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -167,13 +167,13 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
             </div>
           </div>
 
-          <button
+          {/*<button
             onClick={handleGoogleSignIn}
             className="w-full bg-white text-gray-700 border border-gray-300 rounded-lg px-4 py-2 flex items-center justify-center gap-2"
           >
             <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
             Continue with Google
-          </button>
+          </button>*/}
 
           <p className="text-center text-sm text-gray-600">
             {formType === 'register' ? 'Already have an account?' : "Don't have an account?"}{' '}
