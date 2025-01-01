@@ -1,6 +1,6 @@
 // app/api/auth/[...nextauth].ts
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+//import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -13,21 +13,19 @@ if (process.env.NODE_ENV === "development") global.prisma = prisma;
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
-    // Google OAuth Provider
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      profile(profile) {
-        // Map Google profile to user object in your DB
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          emailVerified: true,
-        };
-      },
-    }),
+   // GoogleProvider({
+    //   clientId: process.env.GOOGLE_CLIENT_ID!,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    //   profile(profile) {
+    //     return {
+    //       id: profile.sub,
+    //       name: profile.name,
+    //       email: profile.email,
+    //       image: profile.picture,
+    //       emailVerified: true,
+    //     };
+    //   },
+    // }),
 
     // Custom Credentials Provider
     CredentialsProvider({
