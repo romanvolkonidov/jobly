@@ -1,5 +1,4 @@
-//src/api/messages/[conversationId}/route.ts
-import { NextResponse } from 'next/server';
+//src/api/messages/[conversationId}/route.tsimport { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';
@@ -7,8 +6,9 @@ import type { IronSessionData } from '@/src/types/session';
 
 export async function GET(
   request: Request,
-  { params }: { params: { conversationId: string } }
+  context: { params: { conversationId: string } } // Adjusted type
 ) {
+  const { params } = context; // Extract params from context
   try {
     const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
     if (!session.userId) {
