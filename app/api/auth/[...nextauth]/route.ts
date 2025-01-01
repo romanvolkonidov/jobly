@@ -1,12 +1,18 @@
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import FacebookProvider from 'next-auth/providers/facebook';
-import AppleProvider from 'next-auth/providers/apple';
-import { prisma } from '@/src/lib/prisma';
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
+import AppleProvider from "next-auth/providers/apple";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
+
+// Initialize Prisma Client (Singleton Pattern)
+const prisma = global.prisma || new PrismaClient();
+if (process.env.NODE_ENV === "development") global.prisma = prisma;
 
 const handler = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma), // Connect Prisma Adapter
   providers: [
+    // Google Provider
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -20,6 +26,7 @@ const handler = NextAuth({
         };
       },
     }),
+    // Facebook Provider
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
@@ -28,11 +35,12 @@ const handler = NextAuth({
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          image: profile.picture.data.url,
+          image: profile.picture?.data?.url,
           emailVerified: true,
         };
       },
     }),
+    // Apple Provider
     AppleProvider({
       clientId: process.env.APPLE_CLIENT_ID!,
       clientSecret: process.env.APPLE_CLIENT_SECRET!,
@@ -40,7 +48,11 @@ const handler = NextAuth({
   ],
   callbacks: {
     async session({ session, user }) {
-      session.user.id = user.id;
+      // Attach user ID to the session
+      session.user = {
+        ...session.user,
+        id: user.id,
+      };
       return session;
     },
   },
