@@ -69,7 +69,7 @@ export const VideoPlayer = ({ src }: VideoPlayerProps) => {
       <video
         ref={videoRef}
         className="w-full h-full object-cover"
-        
+        muted
         preload="metadata"
         onClick={handleClick}
         onError={() => setError(true)}
@@ -85,6 +85,26 @@ export const VideoPlayer = ({ src }: VideoPlayerProps) => {
         <source src={src} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+      <div 
+        className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-300 ${
+          isPlaying ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        <button
+          className="w-16 h-16 rounded-full bg-white/80 flex items-center justify-center"
+          onClick={handleClick}
+        >
+          {isPlaying ? (
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
+          ) : (
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   );
 };
