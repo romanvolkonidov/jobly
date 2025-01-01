@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
-export async function GET(request: Request, context: { params: { userId: string } }) {
+export async function GET(req: Request) {
   try {
-    const userId = context.params.userId;
+    const url = new URL(req.url);
+    const userId = url.searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -30,3 +35,4 @@ export async function GET(request: Request, context: { params: { userId: string 
     );
   }
 }
+
