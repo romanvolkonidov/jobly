@@ -6,6 +6,6 @@ export interface IronSessionData {
 
 declare module "iron-session" {
   interface IronSessionData {
-    userId: string;
+    userId?: string; // Make this optional for flexibility during initialization
   }
 }
