@@ -1,4 +1,5 @@
 // app/providers.tsx
+//this file works in the following way: it provides the query client to the app
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

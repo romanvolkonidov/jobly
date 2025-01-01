@@ -1,3 +1,5 @@
+//app/api/upload/video/route.ts
+//this file works in the following way: it uploads a video file to the server
 import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';
@@ -15,6 +17,7 @@ export async function POST(req: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
     console.log('Session found for user:', session.userId);
+    
 
     const formData = await req.formData();
     const file = formData.get('video') as File;
@@ -29,6 +32,13 @@ export async function POST(req: Request) {
       type: file.type,
       size: file.size
     });
+    const allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
+
+if (!allowedVideoTypes.includes(file.type)) {
+  return NextResponse.json({ 
+    error: 'Only MP4 and MOV videos are allowed' 
+  }, { status: 400 });
+}
 
     if (file.size > 100 * 1024 * 1024) {
       console.log('File too large:', file.size);

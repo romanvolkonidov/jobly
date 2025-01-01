@@ -1,5 +1,5 @@
 // src/middleware/csrf.ts
-
+//this file works in the following way: it provides CSRF protection for the app
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import Tokens from 'csrf';

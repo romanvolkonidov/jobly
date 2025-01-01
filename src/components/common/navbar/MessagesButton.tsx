@@ -1,4 +1,5 @@
 // src/components/common/navbar/MessagesButton.tsx
+//this file works in the following way: it contains the messages button for the navbar
 import { MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import MessagesModal from './MessagesModal';

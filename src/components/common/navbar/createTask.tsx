@@ -1,4 +1,5 @@
 //src/components/common/navbar/createTask.tsx
+//this file works in the following way: it contains the category menu for the navbar
 import Link from 'next/link';
 import { tokens } from '@/src/styles/tokens';
 import { useState } from 'react';

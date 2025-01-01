@@ -1,5 +1,5 @@
 // src/middleware/session.ts
-
+//this file works in the following way: it checks if the user is authenticated
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getIronSession, IronSession } from 'iron-session';

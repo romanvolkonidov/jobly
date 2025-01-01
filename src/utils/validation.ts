@@ -1,5 +1,5 @@
 // src/utils/validation.ts
-
+//this file works in the following way: it contains functions for validating user input
 export const validatePassword = (password: string): {
   isValid: boolean;
   errors: string[];

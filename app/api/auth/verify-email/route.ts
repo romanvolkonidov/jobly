@@ -1,5 +1,5 @@
 // app/api/auth/verify-email/route.ts
-
+//this is the file that is reponsible for handling the email verification process
 import { prisma } from '@/src/lib/prisma';
 import { rateLimiterMiddleware } from '@/src/middleware/rateLimiter';
 import { csrfProtection } from '@/src/middleware/csrf';

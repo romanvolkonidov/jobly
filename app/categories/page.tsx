@@ -1,4 +1,5 @@
 // app/categories/page.tsx
+//this file works in the following way: it renders the categories page
 'use client';
 
 import { useState, useCallback } from 'react';

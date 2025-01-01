@@ -1,3 +1,5 @@
+//app/api/auth/[...nextauth].ts
+//this is the file that is reponsible for handling the authentication process
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";

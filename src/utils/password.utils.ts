@@ -1,5 +1,5 @@
 // src/utils/password.utils.tsx
-
+//this file works in the following way: it contains utility functions for password hashing and verification
 import { hash, compare } from 'bcryptjs'
 import crypto from 'crypto'
 

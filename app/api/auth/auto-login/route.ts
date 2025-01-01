@@ -1,4 +1,5 @@
 // app/api/auth/auto-login/route.ts
+//this is the file that is reponsible for handling the auto-login process
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';

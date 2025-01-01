@@ -1,3 +1,6 @@
+//app/head.tsx
+//this file works in the following way: it contains the head tags for the app
+
 import { FontOptimizer } from '@/src/components/common/Performance';
 
 export default function Head() {

@@ -1,4 +1,5 @@
 //src/hooks/useIsMobile.ts
+//this file works in the following way: it checks if the screen is mobile
 import { useState, useEffect } from 'react';
 
 export const useIsMobile = () => {

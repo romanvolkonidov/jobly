@@ -1,5 +1,5 @@
 // app/api/auth/login/route.ts
-
+//this is the file that is reponsible for handling the login process
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { verifyPassword } from '@/src/utils/password.utils';

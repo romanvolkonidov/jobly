@@ -1,62 +1,90 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
+import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';
 import type { IronSessionData } from '@/src/types/session';
 
-export async function GET(request: Request) {
+export const revalidate = 30;
+
+export async function GET(request: NextRequest) {
   try {
-    // Extract conversationId from the URL
     const url = new URL(request.url);
-    const conversationId = url.pathname.split('/').pop(); // Get the last part of the URL
+    const conversationId = url.pathname.split('/').pop();
+    const limit = Number(url.searchParams.get('limit')) || 50;
+    const offset = Number(url.searchParams.get('offset')) || 0;
 
     if (!conversationId) {
       return NextResponse.json({ error: 'Missing conversationId' }, { status: 400 });
     }
 
-    // Retrieve session data
-    const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
+    // Get session using cookies
+    const cookieStore = await cookies();
+
+    const session = await getIronSession<IronSessionData>(cookieStore, sessionConfig);
+    
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch task to verify user involvement
-    const task = await prisma.task.findUnique({
-      where: { id: conversationId },
-      include: { bids: true },
-    });
-
-    if (!task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
-    }
-
-    // Verify user authorization: either task creator or bidder
-    const userHasBid = task.bids.some(bid => bid.userId === session.userId);
-    if (task.userId !== session.userId && !userHasBid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Fetch messages associated with the task
+    // Updated Prisma query with correct types
     const messages = await prisma.message.findMany({
-      where: { taskId: conversationId },
-      include: {
-        from: { select: { imageUrl: true } },
+      where: {
+        taskId: conversationId, // Assuming messages are linked to tasks
       },
-      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        fromUserId: true,
+        toUserId: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit,
+      skip: offset,
     });
 
-    // Format messages for response
+    // Join with users table to get profile images
+    const userIds = [...new Set(messages.map(m => m.fromUserId))];
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds
+        }
+      },
+      select: {
+        id: true,
+        imageUrl: true
+      }
+    });
+
+    // Create a map of user IDs to image URLs
+    const userImageMap = Object.fromEntries(
+      users.map(user => [user.id, user.imageUrl])
+    );
+
     const formattedMessages = messages.map(msg => ({
       id: msg.id,
       content: msg.content,
-      isSender: msg.fromUserId === session.userId,
-      userImageUrl: msg.from.imageUrl,
       timestamp: msg.createdAt,
+      fromUserId: msg.fromUserId,
+      userImageUrl: userImageMap[msg.fromUserId],
+      isSender: msg.fromUserId === session.userId
     }));
 
-    return NextResponse.json(formattedMessages);
+    return NextResponse.json(formattedMessages, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=59',
+      },
+    });
+
   } catch (error) {
     console.error('Error fetching messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

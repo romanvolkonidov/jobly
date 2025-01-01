@@ -1,4 +1,5 @@
 //src/components/common/navbar/UserMenu.tsx
+//this file works in the following way: it contains the user menu component
 'use client';
 
 import React from 'react';

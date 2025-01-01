@@ -1,5 +1,5 @@
 // app/api/auth/reset-password/route.ts
-
+////this is the file that is reponsible for handling the reset password process
 import { prisma } from '@/src/lib/prisma';
 import { hashPassword } from '@/src/utils/password.utils';
 import { validatePassword } from '@/src/utils/validation';

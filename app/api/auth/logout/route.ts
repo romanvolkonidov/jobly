@@ -1,4 +1,5 @@
 // app/api/auth/logout/route.ts
+//this is the file that is reponsible for handling the logout process
 import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';

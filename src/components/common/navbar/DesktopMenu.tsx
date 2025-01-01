@@ -1,4 +1,5 @@
 //src/components/common/navbar/DesktopMenu.tsx
+//this file works in the following way: it contains the desktop menu for the navbar
 'use client';
 
 import { withLazyLoading } from '@/src/components/common/Performance';

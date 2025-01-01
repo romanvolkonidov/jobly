@@ -1,5 +1,5 @@
 // app/api/tasks/[taskId]/respond/route.ts
-
+//this file works in the following way: it creates a bid for a task
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';

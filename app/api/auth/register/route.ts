@@ -1,4 +1,5 @@
 // app/api/auth/register/route.ts 
+////this is the file that is reponsible for handling the registration process
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { hash } from 'bcryptjs';

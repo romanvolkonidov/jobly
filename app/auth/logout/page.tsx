@@ -1,4 +1,5 @@
 // app/auth/logout/page.tsx
+//this file works in the following way: it logs out the user
 'use client';
 
 import { useEffect } from 'react';

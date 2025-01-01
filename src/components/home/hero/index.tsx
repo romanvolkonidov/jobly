@@ -1,4 +1,5 @@
 //src/components/home/hero/index.tsx
+//this file works in the following way: it contains the hero section of the home page
 'use client';
 
 import { useRouter } from 'next/navigation'; // Add this import

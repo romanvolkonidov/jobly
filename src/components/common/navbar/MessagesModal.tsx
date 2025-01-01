@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { withLazyLoading } from '@/src/components/common/Performance';
+import ProfilePreviewModal from './ProfilePreviewModal';
 
 interface Message {
   id: string;
@@ -21,6 +22,7 @@ interface MessageContent {
   isSender: boolean;
   userImageUrl?: string;
   timestamp: string;
+  fromUserId: string;
 }
 
 interface MessagesModalProps {
@@ -31,10 +33,14 @@ interface MessagesModalProps {
 }
 
 function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: MessagesModalProps) {
-      const [conversations, setConversations] = useState<Message[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Message[]>([]);
+    const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageContent[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isProfilePreviewOpen, setIsProfilePreviewOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -67,48 +73,80 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
               conversationId: selectedConversation,
             }),
           });
-          onMessagesRead(); // Call this after successfully marking messages as read
+          onMessagesRead();
         } catch (error) {
           console.error('Error marking messages as read:', error);
         }
       };
-  
+
       markMessagesAsRead();
     }
   }, [selectedConversation, onMessagesRead]);
-  
+
   const fetchConversations = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/messages/conversations');
       const data = await response.json();
+  
+      if (!response.ok) {
+        console.error('Server response:', data);
+        throw new Error(data.error || 'Failed to fetch conversations');
+      }
+  
+      if (!Array.isArray(data)) {
+        console.error('Unexpected data format:', data);
+        throw new Error('Invalid data format received');
+      }
+  
+      console.log('Received conversations:', data);
       setConversations(data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      setConversations([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchMessages = async (conversationId: string) => {
-    try {
-      const response = await fetch(`/api/messages/${conversationId}`, {
+// Update fetchMessages function in MessagesModal component
+const fetchMessages = async (conversationId: string) => {
+  try {
+    setMessagesLoading(true);
+    const limit = 50;
+    const offset = 0; // For initial load
+    
+    const response = await fetch(
+      `/api/messages/${conversationId}?limit=${limit}&offset=${offset}`,
+      {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include'
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to fetch messages');
       }
-  
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      setMessages([]);
-    } finally {
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch messages');
     }
-  };
+
+    if (!Array.isArray(data)) {
+      console.log('Unexpected messages data format:', data);
+      setMessages([]);
+      return;
+    }
+
+    setMessages(data);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    setMessages([]);
+  } finally {
+    setMessagesLoading(false);
+  }
+};
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +169,11 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
     }
   };
 
+  const handleProfileClick = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsProfilePreviewOpen(true);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -142,21 +185,44 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
             <h2 className="text-xl font-semibold">Messages</h2>
           </div>
           <div className="overflow-y-auto h-[calc(100%-4rem)]">
-            {conversations.map((conv) => (
-              <button
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv.id)}
-                className={`w-full p-4 text-left hover:bg-gray-50 ${
-                  selectedConversation === conv.id ? 'bg-gray-50' : ''
-                }`}
-              >
+            {loading ? (
+              // Loading Skeleton UI
+              <div className="space-y-4 p-4">
+                {[...Array(5)].map((_, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                      <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+                      <div className="h-2 bg-gray-200 rounded w-1/4 animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="flex items-center justify-center h-full p-4">
+                <p className="text-gray-500 text-center">No messages yet</p>
+              </div>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => setSelectedConversation(conv.id)}
+                  className={`w-full p-4 text-left hover:bg-gray-50 ${
+                    selectedConversation === conv.id ? 'bg-gray-50' : ''
+                  }`}
+                >
                 <div className="flex items-center gap-3">
                   <Image
                     src={conv.senderImageUrl || '/default-avatar.png'}
                     alt={conv.senderName}
                     width={40}
                     height={40}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleProfileClick(conv.senderId);
+                    }}
                   />
                   <div>
                     <div className="font-medium">{conv.senderName}</div>
@@ -167,10 +233,10 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
                   </div>
                 </div>
               </button>
-            ))}
+            )))}
           </div>
         </div>
-   
+
         {/* Messages Area */}
         <div className="flex-1 flex flex-col">
           {selectedConversation ? (
@@ -184,41 +250,60 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
                   View Task: {conversations.find(c => c.id === selectedConversation)?.taskTitle}
                 </Link>
               </div>
-   
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-2 ${msg.isSender ? 'flex-row-reverse' : 'flex-row'}`}
-                  >
-                    <Image
-                      src={msg.userImageUrl || '/default-avatar.png'}
-                      alt="User"
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
-                    />
+                {messagesLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                          <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    No messages in this conversation yet
+                  </div>
+                ) : (
+                  messages.map((msg) => (
                     <div
-                      className={`max-w-[70%] break-words rounded-xl px-4 py-2 ${
-                        msg.isSender
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}
+                      key={msg.id}
+                      className={`flex items-start gap-2 ${msg.isSender ? 'flex-row-reverse' : 'flex-row'}`}
                     >
-                      <p>{msg.content}</p>
-                      <span 
-                        className={`text-xs ${
-                          msg.isSender ? 'text-blue-100' : 'text-gray-500'
+                      <Image
+                        src={msg.userImageUrl || '/default-avatar.png'}
+                        alt="User"
+                        width={32}
+                        height={32}
+                        className="rounded-full object-cover cursor-pointer"
+                        onClick={() => handleProfileClick(msg.fromUserId)}
+                      />
+                      <div
+                        className={`max-w-[70%] break-words rounded-xl px-4 py-2 ${
+                          msg.isSender
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-900'
                         }`}
                       >
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </span>
+                        <p>{msg.content}</p>
+                        <span 
+                          className={`text-xs ${
+                            msg.isSender ? 'text-blue-100' : 'text-gray-500'
+                          }`}
+                        >
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-   
+
               {/* Message Input */}
               <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
                 <div className="flex gap-2">
@@ -244,7 +329,7 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
             </div>
           )}
         </div>
-   
+
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -253,8 +338,17 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId }: Messa
           <X className="w-6 h-6" />
         </button>
       </div>
+
+      {/* Profile Preview Modal */}
+      {selectedUserId && (
+        <ProfilePreviewModal
+          userId={selectedUserId}
+          isOpen={isProfilePreviewOpen}
+          onClose={() => setIsProfilePreviewOpen(false)}
+        />
+      )}
     </div>
-   );
+  );
 }
 
 export default withLazyLoading(MessagesModal);

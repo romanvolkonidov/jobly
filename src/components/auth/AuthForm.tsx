@@ -1,5 +1,5 @@
 // src/components/auth/AuthForm.tsx
-
+//this file works in the following way: it renders the authentication form 
 'use client';
 
 import { useState, useCallback } from 'react';

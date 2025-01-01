@@ -1,4 +1,5 @@
 //app/create-task/budget/page.tsx
+//this file works in the following way: it renders the budget form
 'use client';
 
 import { useState } from 'react';

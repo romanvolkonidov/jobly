@@ -1,4 +1,5 @@
 // app/auth/reset-password/page.tsx
+//this file works in the following way: it renders the reset password form
 'use client';
 
 import { Suspense } from 'react';

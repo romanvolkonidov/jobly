@@ -1,4 +1,5 @@
 // app/api/auth/forgot-password/route.ts
+//this is the file that is reponsible for handling the password reset process
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { sendEmail } from '@/src/utils/email.utils';

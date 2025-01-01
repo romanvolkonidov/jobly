@@ -1,4 +1,5 @@
 // src/components/common/modals/TaskResponseModal.tsx
+//this file works in the following way: it contains the modal for responding to a task
 import { useState } from 'react';
 import { X } from 'lucide-react';
 

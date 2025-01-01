@@ -1,3 +1,4 @@
+// app/api/messages/conversations/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
@@ -6,57 +7,93 @@ import type { IronSessionData } from '@/src/types/session';
 
 export async function GET(request: Request) {
   try {
-    // Extract conversationId from the URL
-    const url = new URL(request.url);
-    const conversationId = url.pathname.split('/').pop(); // Get the last part of the URL
-
-    if (!conversationId) {
-      return NextResponse.json({ error: 'Missing conversationId' }, { status: 400 });
-    }
-
-    // Retrieve session data
+    console.log('Fetching conversations...');
+    
+    // Get session data
     const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
+    console.log('Session data:', session);
+
     if (!session.userId) {
+      console.log('No user ID in session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch task to verify user involvement
-    const task = await prisma.task.findUnique({
-      where: { id: conversationId },
-      include: { bids: true },
-    });
+    // Log user ID
+    console.log('User ID:', session.userId);
 
-    if (!task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
-    }
-
-    // Verify user authorization: either task creator or bidder
-    const userHasBid = task.bids.some(bid => bid.userId === session.userId);
-    if (task.userId !== session.userId && !userHasBid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Fetch messages associated with the task
-    const messages = await prisma.message.findMany({
-      where: { taskId: conversationId },
-      include: {
-        from: { select: { imageUrl: true } },
+    // Fetch all tasks
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { userId: session.userId },
+          { bids: { some: { userId: session.userId } } }
+        ]
       },
-      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          }
+        },
+        bids: {
+          where: {
+            userId: session.userId
+          },
+          select: {
+            userId: true,
+            createdBy: {
+              select: {
+                name: true,
+                imageUrl: true
+              }
+            }
+          }
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1,
+          select: {
+            content: true,
+            createdAt: true,
+          }
+        }
+      }
     });
 
-    // Format messages for response
-    const formattedMessages = messages.map(msg => ({
-      id: msg.id,
-      content: msg.content,
-      isSender: msg.fromUserId === session.userId,
-      userImageUrl: msg.from.imageUrl,
-      timestamp: msg.createdAt,
-    }));
+    console.log('Found tasks:', tasks);
 
-    return NextResponse.json(formattedMessages);
+    // Format the data
+    const conversations = tasks.map(task => {
+      const lastMessage = task.messages[0];
+      const isCreator = task.createdBy.id === session.userId;
+      const bid = task.bids[0];
+      
+      return {
+        id: task.id,
+        senderId: isCreator ? bid?.userId : task.createdBy.id,
+        senderName: isCreator ? bid?.createdBy.name : task.createdBy.name,
+        senderImageUrl: isCreator ? bid?.createdBy.imageUrl : task.createdBy.imageUrl,
+        taskId: task.id,
+        taskTitle: task.title,
+        lastMessage: lastMessage?.content || 'No messages yet',
+        timestamp: lastMessage?.createdAt || new Date(),
+      };
+    });
+
+    console.log('Formatted conversations:', conversations);
+    return NextResponse.json(conversations);
+
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    console.error('Detailed error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to fetch conversations',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

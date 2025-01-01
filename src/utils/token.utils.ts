@@ -1,5 +1,5 @@
 // src/utils/token.utils.ts
-
+//this file works in the following way: it contains utility functions for generating and verifying tokens
 import { randomBytes } from 'crypto';
 import { prisma } from '@/src/lib/prisma';
 

@@ -1,4 +1,5 @@
 //src/components/common/navbar/MenuToggle.tsx
+//this file works in the following way: it contains the menu toggle button for the navbar
 import { Menu } from 'lucide-react';
 import { withLazyLoading } from '@/src/components/common/Performance';
 

@@ -1,4 +1,5 @@
 // src/components/common/navbar/index.tsx
+//this file works in the following way: it contains the navbar for the app
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

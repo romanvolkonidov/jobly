@@ -1,5 +1,5 @@
 // src/types/iron.d.ts
-
+//this file works in the following way: it extends the IronSessionData interface from the iron-session package
 import 'iron-session';
 
 declare module 'iron-session' {

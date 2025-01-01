@@ -1,3 +1,6 @@
+//app/api/tasks/[taskId]/route.ts
+//this file works in the following way: it fetches a task by its ID
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 

@@ -1,4 +1,5 @@
 //app/create-task/details/page.tsx
+//this file works in the following way: it renders the task details form
 'use client';
 
 import { useState } from 'react';

@@ -1,4 +1,5 @@
 // app/projects/page.tsx
+//this file works in the following way: it renders the projects page
 'use client';
 
 import { useState } from 'react';

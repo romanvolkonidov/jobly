@@ -1,4 +1,5 @@
 //app/settings/page.tsx
+//this file works in the following way: it renders the settings page
 'use client';
 
 import { useState, Suspense } from 'react';

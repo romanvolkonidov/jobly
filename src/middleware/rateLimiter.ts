@@ -1,5 +1,5 @@
 // src/middleware/rateLimiter.ts
-
+//this file works in the following way: it limits the number of requests a user can make in a given time window
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { Redis } from '@upstash/redis';

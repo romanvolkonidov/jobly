@@ -1,4 +1,5 @@
 // app/api/profile/delete/route.ts
+//this file works in the following way: it deletes a user's profile
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';

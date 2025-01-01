@@ -1,3 +1,5 @@
+//app/api/profile/portfolio-image/route.ts
+//this file works in the following way: it deletes a user's portfolio image
 import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';

@@ -1,3 +1,5 @@
+//src/components/common/Performance.tsx
+//this file works in the following way: it contains the performance optimization components
 import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
 import { Suspense, lazy, ComponentType } from 'react';

@@ -1,4 +1,5 @@
 //app/auth/verify-email/page.tsx
+//this file works in the following way: it verifies the email of the user
 'use client';
 
 import { Suspense } from 'react';

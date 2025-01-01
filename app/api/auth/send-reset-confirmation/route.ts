@@ -1,5 +1,5 @@
 // app/api/auth/send-reset-confirmation/route.ts
-
+//this is the file that is reponsible for sending the reset confirmation email
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { sendEmail } from '@/src/utils/email.utils';

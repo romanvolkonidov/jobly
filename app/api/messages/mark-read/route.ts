@@ -1,4 +1,5 @@
 // app/api/messages/mark-read/route.ts
+//this file works in the following way: it marks all messages in a conversation as read
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';

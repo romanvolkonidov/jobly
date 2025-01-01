@@ -1,5 +1,5 @@
 // src/utils/email.utils.ts
-
+//this file works in the following way: it sends emails using the nodemailer package
 import { createTransport } from 'nodemailer';
 import { tokens } from '@/src/styles/tokens';
 

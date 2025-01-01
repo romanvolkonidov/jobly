@@ -1,3 +1,5 @@
+//src/components/lib/prisma.ts
+//this file works in the following way: it exports the prisma client
 import { PrismaClient } from "@prisma/client";
 
 declare global {

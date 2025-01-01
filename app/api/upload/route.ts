@@ -1,4 +1,5 @@
 // app/api/upload/route.ts
+//this file works in the following way: it uploads a user's video
 import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionConfig } from '@/src/middleware/session';

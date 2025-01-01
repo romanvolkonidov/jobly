@@ -1,4 +1,5 @@
 // src/store/authStore.ts
+//this file works in the following way: it creates a store for the user authentication
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '../types/auth';

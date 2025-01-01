@@ -1,4 +1,5 @@
 // app/layout.tsx
+//this file works in the following way: it contains the layout for the app
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

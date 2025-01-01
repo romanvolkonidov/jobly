@@ -1,4 +1,5 @@
 // src/services/auth.service.ts
+//this file works in the following way: it provides the auth service
 import { RegisterData, RegisterResponse, LoginData, User } from '@/src/types/auth';
 
 class AuthService {

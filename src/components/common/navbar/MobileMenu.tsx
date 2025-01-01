@@ -1,4 +1,5 @@
 //src/components/common/navbar/MobileMenu.tsx
+//this file works in the following way: it contains the mobile menu component
 'use client';
 
 import Image from 'next/image';
