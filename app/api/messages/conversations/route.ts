@@ -1,4 +1,3 @@
-// app/api/messages/conversations/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getIronSession } from 'iron-session';
@@ -7,69 +6,57 @@ import type { IronSessionData } from '@/src/types/session';
 
 export async function GET(request: Request) {
   try {
-    const session = await getIronSession<IronSessionData>(
-      request,
-      NextResponse.next(),
-      sessionConfig
-    );
+    // Extract conversationId from the URL
+    const url = new URL(request.url);
+    const conversationId = url.pathname.split('/').pop(); // Get the last part of the URL
+
+    if (!conversationId) {
+      return NextResponse.json({ error: 'Missing conversationId' }, { status: 400 });
+    }
+
+    // Retrieve session data
+    const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
     if (!session.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const conversations = await prisma.message.findMany({
-      where: {
-        OR: [
-          { fromUserId: session.userId },
-          { toUserId: session.userId }
-        ]
-      },
-      include: {
-        from: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true
-          }
-        },
-        to: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true
-          }
-        },
-        task: {
-          select: {
-            title: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      distinct: ['taskId']
-    });
-    
-    const formattedConversations = conversations.map(conv => {
-      // Determine if the 'other' person is the sender or receiver
-      const otherUser = conv.fromUserId === session.userId ? conv.to : conv.from;
-      
-      return {
-        id: conv.taskId,
-        senderId: otherUser.id,
-        senderName: otherUser.name,
-        senderImageUrl: otherUser.imageUrl,
-        taskId: conv.taskId,
-        taskTitle: conv.task.title,
-        lastMessage: conv.content,
-        timestamp: conv.createdAt
-      };
+    // Fetch task to verify user involvement
+    const task = await prisma.task.findUnique({
+      where: { id: conversationId },
+      include: { bids: true },
     });
 
-    return NextResponse.json(formattedConversations);
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    // Verify user authorization: either task creator or bidder
+    const userHasBid = task.bids.some(bid => bid.userId === session.userId);
+    if (task.userId !== session.userId && !userHasBid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch messages associated with the task
+    const messages = await prisma.message.findMany({
+      where: { taskId: conversationId },
+      include: {
+        from: { select: { imageUrl: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Format messages for response
+    const formattedMessages = messages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      isSender: msg.fromUserId === session.userId,
+      userImageUrl: msg.from.imageUrl,
+      timestamp: msg.createdAt,
+    }));
+
+    return NextResponse.json(formattedMessages);
   } catch (error) {
-    console.error('Error fetching conversations:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch conversations' },
-      { status: 500 }
-    );
+    console.error('Error fetching messages:', error);
+    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }
