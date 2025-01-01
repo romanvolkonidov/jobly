@@ -6,12 +6,21 @@ import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { Dispatch, SetStateAction } from 'react';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
-  setIsUserMenuOpenAction: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsUserMenuOpenAction: Dispatch<SetStateAction<boolean>>;
+  isLoggedIn: boolean;
+  user: User | null; // Add this property
   onLogoutAction: () => void;
 }
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 
 export function UserMenu({ 
   isUserMenuOpen, 
