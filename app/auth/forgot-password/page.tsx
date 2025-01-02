@@ -1,9 +1,8 @@
-// src/components/auth/ForgotPasswordForm.tsx
 'use client';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@zod/resolver';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 
@@ -22,7 +21,6 @@ export default function ForgotPasswordForm() {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      // Step 1: Verify and generate token
       const verifyRes = await fetch('/api/auth/forgot-password/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +29,6 @@ export default function ForgotPasswordForm() {
       const verifyData = await verifyRes.json();
 
       if (verifyData.success && verifyData.resetToken) {
-        // Step 2: Send email
         await fetch('/api/auth/forgot-password/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -43,7 +40,8 @@ export default function ForgotPasswordForm() {
       }
 
       toast.success('If an account exists, a reset link has been sent.');
-    } catch  {
+    } catch (error) {
+      console.error('Password reset error:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
