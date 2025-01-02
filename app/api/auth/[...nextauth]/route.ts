@@ -13,21 +13,6 @@ if (process.env.NODE_ENV === "development") global.prisma = prisma;
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
-   // GoogleProvider({
-    //   clientId: process.env.GOOGLE_CLIENT_ID!,
-    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    //   profile(profile) {
-    //     return {
-    //       id: profile.sub,
-    //       name: profile.name,
-    //       email: profile.email,
-    //       image: profile.picture,
-    //       emailVerified: true,
-    //     };
-    //   },
-    // }),
-
-    // Custom Credentials Provider
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -35,49 +20,45 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Check for email and password credentials
         if (!credentials?.email || !credentials.password) return null;
-
-        // Fetch user from the database
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
-
-        // If no user found, return null
         if (!user) return null;
-
-        // Verify password
         const isValid = await verifyPassword(credentials.password, user.password);
-
-        // If password is valid, return user, otherwise return null
         return isValid ? user : null;
       }
-    }),
+    })
   ],
-
+  secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    pkceCodeVerifier: {
+      name: 'next-auth.pkce.code_verifier',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
   callbacks: {
-    // Session callback to include user ID in the session
     async session({ session, user }) {
       session.user = {
         ...session.user,
-        id: user.id,  // Attach user ID to session
+        id: user.id,
       };
       return session;
     },
   },
-
-  // You can add other configurations like pages, session options, etc.
   pages: {
-    signIn: '/auth/signin',  // Custom sign-in page
-    error: '/auth/error',    // Custom error page
+    signIn: '/auth/signin',
+    error: '/auth/error',
   },
-
   session: {
-    strategy: "jwt",  // Use JWT for session management
-    maxAge: 24 * 60 * 60,  // Session max age in seconds (1 day)
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60,
   },
-
-  secret: process.env.NEXTAUTH_SECRET,  // Secret for JWT encryption
 });
 
 export { handler as GET, handler as POST };
