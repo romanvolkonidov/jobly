@@ -1,5 +1,28 @@
 import { Resend } from 'resend';
-import { tokens } from '@/src/styles/tokens';
+
+const mockTokens = {
+  typography: {
+    fontFamily: {
+      primary: 'Arial, sans-serif'
+    }
+  },
+  colors: {
+    gray: {
+      900: '#111827'
+    },
+    primary: {
+      blue: '#2563eb'
+    },
+    white: '#ffffff'
+  },
+  spacing: {
+    sm: '0.5rem',
+    md: '1rem'
+  },
+  borderRadius: {
+    md: '0.375rem'
+  }
+};
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -15,7 +38,7 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
     to,
     subject,
     html: `
-      <div style="font-family: ${tokens.typography.fontFamily.primary}; color: ${tokens.colors.gray[900]};">
+      <div style="font-family: ${mockTokens.typography.fontFamily.primary}; color: ${mockTokens.colors.gray[900]};">
         ${html}
       </div>
     `
@@ -34,10 +57,10 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       <a 
         href="${verifyUrl}" 
         style="
-          background-color: ${tokens.colors.primary.blue}; 
-          color: ${tokens.colors.white};
-          padding: ${tokens.spacing.sm} ${tokens.spacing.md};
-          border-radius: ${tokens.borderRadius.md};
+          background-color: ${mockTokens.colors.primary.blue}; 
+          color: ${mockTokens.colors.white};
+          padding: ${mockTokens.spacing.sm} ${mockTokens.spacing.md};
+          border-radius: ${mockTokens.borderRadius.md};
           text-decoration: none;
         "
       >
