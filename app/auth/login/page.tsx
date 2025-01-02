@@ -1,3 +1,4 @@
+
 // app/auth/login/page.tsx
 //this file works in the following way: it renders the login form
 'use client';

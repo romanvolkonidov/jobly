@@ -33,14 +33,20 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    setLoading(true);
-    setMessage('');
-  
+    
     try {
+      setLoading(true);
+      setMessage('');
+      setMessageType(null);
+  
+      // Get CSRF token
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      if (!csrfToken) throw new Error('CSRF token not found');
-
+      if (!csrfToken) {
+        throw new Error('CSRF token not found');
+      }
+  
       if (formType === 'register') {
+        // Register new user
         const response = await fetch('/api/auth/register', {
           method: 'POST',
           headers: {
@@ -49,28 +55,37 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
           },
           body: JSON.stringify(formData)
         });
-        
+  
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
         
+        if (!response.ok) {
+          throw new Error(data.message || 'Registration failed');
+        }
+  
         setMessageType('success');
         setMessage('Please check your email to verify your account');
+        
       } else {
+        // Login existing user
         const result = await signIn('credentials', {
           redirect: false,
           email: formData.email,
           password: formData.password
         });
-
+  
         if (result?.error) {
           throw new Error(result.error);
         }
-
-        router.push('/');
+  
+        if (result?.ok) {
+          router.push('/');
+          return;
+        }
       }
     } catch (error) {
       setMessageType('error');
       setMessage(error instanceof Error ? error.message : 'Authentication failed');
+      console.error('Auth error:', error);
     } finally {
       setLoading(false);
     }
