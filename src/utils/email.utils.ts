@@ -20,6 +20,14 @@ interface SendEmailParams {
 }
 
 export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
+  console.log('Starting email send to:', to);
+  console.log('Nodemailer config:', {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    user: process.env.SMTP_USER,
+    passLength: process.env.SMTP_PASS?.length
+  });
+ 
   try {
     const result = await transporter.sendMail({
       from: `"${process.env.SENDER_NAME}" <${process.env.SMTP_USER}>`,
@@ -37,7 +45,7 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
     console.error('Email error:', error);
     throw error;
   }
-};
+ };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`;
