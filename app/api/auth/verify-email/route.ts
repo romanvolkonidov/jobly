@@ -1,25 +1,30 @@
-// app/api/auth/verify-email/route.ts
-//this is the file that is reponsible for handling the email verification process
 import { prisma } from '@/src/lib/prisma';
 import { rateLimiterMiddleware } from '@/src/middleware/rateLimiter';
 import { csrfProtection } from '@/src/middleware/csrf';
 import { NextResponse } from 'next/server';
+import { sendVerificationEmail } from '@/src/utils/email.utils';
 
-// app/api/auth/verify-email/route.ts
 export const POST = rateLimiterMiddleware(
   csrfProtection(async (req: Request) => {
     try {
-      const { token } = await req.json();
-      console.log("Verification token:", token); // Add logging
+      const { email, token } = await req.json();
+
+      if (!email || !token) {
+        return NextResponse.json(
+          { error: 'Email and token required' },
+          { status: 400 }
+        );
+      }
+
+      await sendVerificationEmail(email, token);
 
       const user = await prisma.user.findUnique({
         where: { verificationToken: token }
       });
-      console.log("User found:", !!user); // Add logging
 
       if (!user) {
         return NextResponse.json(
-          { error: 'Invalid verification token' },
+          { error: 'Invalid token' },
           { status: 400 }
         );
       }
@@ -31,7 +36,6 @@ export const POST = rateLimiterMiddleware(
           verificationToken: null
         }
       });
-      console.log("User verified successfully"); // Add logging
 
       return NextResponse.json({ 
         success: true,
@@ -39,7 +43,7 @@ export const POST = rateLimiterMiddleware(
       });
 
     } catch (error) {
-      console.error('Email verification error:', error);
+      console.error('Verification error:', error);
       return NextResponse.json(
         { error: 'Verification failed' },
         { status: 500 }
