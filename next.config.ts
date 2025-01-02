@@ -33,17 +33,13 @@ const nextConfig = {
     const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
     return [
       {
-        source: '/:path*',
-        destination: 'https://jobly-iota.vercel.app/:path*',
-      },
-      {
         source: '/api/v1/:path*',
-        destination: `${API_BASE_URL}/api/v1/:path*I. `,
+        destination: `${API_BASE_URL}/api/v1/:path*`, // Fixed typo: removed 'I.'
       },
       {
         source: '/ws',
         destination: process.env.WS_URL || 'http://localhost:8080/ws',
-      },
+      }
     ];
   },
 
