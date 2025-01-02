@@ -14,7 +14,7 @@ async function testConnection() {
 }
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: "test-secret-temporary", // Temporary for testing
 
   adapter: PrismaAdapter(prisma),
   providers: [
