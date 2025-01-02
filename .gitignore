@@ -8,3 +8,4 @@ build
 *.exe
 node_modules/
 .env
+.vercel
