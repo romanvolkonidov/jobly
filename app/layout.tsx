@@ -5,7 +5,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { generateCsrfToken } from "@/src/middleware/csrf";
+//import { generateCsrfToken } from "@/src/middleware/csrf";
 import Navbar from "@/src/components/common/navbar/index";
 import { Providers } from "./providers";
 import { Suspense } from "react";
@@ -27,12 +27,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const csrfToken = generateCsrfToken();
+ // const csrfToken = generateCsrfToken();
 
   return (
     <html lang="en">
       <head>
-        <meta name="csrf-token" content={csrfToken} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
