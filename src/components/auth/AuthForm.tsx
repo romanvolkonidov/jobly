@@ -39,14 +39,13 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
       setMessage('');
       setMessageType(null);
   
-      // Get CSRF token
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       if (!csrfToken) {
         throw new Error('CSRF token not found');
       }
   
       if (formType === 'register') {
-        // Register new user
+        // Register new user and create profile
         const response = await fetch('/api/auth/register', {
           method: 'POST',
           headers: {
@@ -62,6 +61,17 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
           throw new Error(data.message || 'Registration failed');
         }
   
+        // Sign in after registration
+        const signInResult = await signIn('credentials', {
+          redirect: false,
+          email: formData.email,
+          password: formData.password
+        });
+  
+        if (signInResult?.error) {
+          throw new Error(signInResult.error);
+        }
+  
         setMessageType('success');
         setMessage('Please check your email to verify your account');
         
@@ -70,7 +80,8 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
         const result = await signIn('credentials', {
           redirect: false,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          callbackUrl: '/'
         });
   
         if (result?.error) {
@@ -90,7 +101,6 @@ export default function AuthForm({ defaultView }: AuthFormProps) {
       setLoading(false);
     }
   }, [formType, formData, loading, router]);
-
   //const handleGoogleSignIn = () => {
     //signIn('google', { callbackUrl: '/' });
   //};

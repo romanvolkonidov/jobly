@@ -1,3 +1,4 @@
+//src/common/navbar/UserMenu.tsx
 'use client';
 
 import React from 'react';
@@ -5,32 +6,49 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
-import { Dispatch, SetStateAction } from 'react';
+import { signOut, getSession } from 'next-auth/react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Session } from 'next-auth';
 
 interface UserMenuProps {
   isUserMenuOpen: boolean;
   setIsUserMenuOpenAction: Dispatch<SetStateAction<boolean>>;
   isLoggedIn: boolean;
-  user: User | null; // Add this property
+  user: User | null;
   onLogoutAction: () => void;
 }
+
 interface User {
   id: string;
   name: string;
   email: string;
+  image?: string;
 }
 
-
-export function UserMenu({ 
-  isUserMenuOpen, 
+export function UserMenu({
+  isUserMenuOpen,
   setIsUserMenuOpenAction,
-  onLogoutAction 
+  onLogoutAction
 }: UserMenuProps) {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const isLoading = status === 'loading';
+  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
   const isLoggedIn = !!session;
+
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const userSession = await getSession();
+        setSession(userSession);
+      } catch (error) {
+        console.error('Session loading error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSession();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -59,7 +77,7 @@ export function UserMenu({
       >
         {isLoggedIn ? (
           <Image
-            src={session.user?.image || '/default-avatar.png'}
+            src={session?.user?.image || '/default-avatar.png'}
             alt="Profile"
             width={40}
             height={40}

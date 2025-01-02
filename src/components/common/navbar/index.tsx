@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import MenuToggle from './MenuToggle';
 import MobileMenu from './MobileMenu';
 import DesktopMenu from './DesktopMenu';
@@ -10,58 +10,39 @@ import { AnimatePresence } from 'framer-motion';
 import MessagesButton from './MessagesButton';
 import { Bell } from 'lucide-react';
 import { withLazyLoading } from '@/src/components/common/Performance';
-import useAuthStore from '@/src/store/authStore';
+import { useSession } from "next-auth/react";
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 function Navbar() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, isAuthenticated, isLoading, setAuth, logout } = useAuthStore();
+  const { data: session, status } = useSession();
+  const isAuthenticated = !!session;
+
 
   // Logout handler
-  const handleLogout = useCallback(() => {
-    logout();
-  }, [logout]);
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/auth/login');
+  };
 
   // Check session and fetch user data
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const sessionResponse = await fetch('/api/auth/check-session', {
-          credentials: 'include',
-        });
-        const sessionData = await sessionResponse.json();
 
-        if (sessionData.isLoggedIn) {
-          const userResponse = await fetch('/api/profile', {
-            credentials: 'include',
-          });
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            setAuth(userData);
-          } else {
-            console.error('Failed to fetch user data');
-            logout();
-          }
-        } else {
-          logout();
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-        logout();
-      }
-    };
-
-    checkSession();
-  }, [setAuth, logout]);
-
-  // Handle loading state
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <div className="flex justify-center items-center h-16 bg-white border-b">
         <span className="text-gray-600">Loading...</span>
       </div>
     );
   }
+
+  const user = session?.user ? {
+    id: session.user.id as string,
+    name: session.user.name || '',  // Default to empty string
+    email: session.user.email || '' // Default to empty string
+  } : null;
 
   return (
     <nav className="fixed w-full top-0 z-50 bg-white border-b">

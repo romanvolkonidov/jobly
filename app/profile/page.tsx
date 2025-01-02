@@ -40,25 +40,36 @@ useEffect(() => {
   checkSession();
 }, []);
 
-  const fetchUserData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/profile', { credentials: 'include' });
+const fetchUserData = async () => {
+  try {
+    setIsLoading(true);
+    const response = await fetch('/api/profile', { credentials: 'include' });
 
-      if (!response.ok) throw new Error('Failed to fetch profile data');
-
-      const data = await response.json();
-      setUser(data);
-      setAboutMe(data.aboutMe || '');
-      setImageUrl(data.imageUrl || '');
-      setPortfolioImages(data.portfolioImages || []);
-      setPortfolioVideo(data.portfolioVideo || null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to fetch profile data');
     }
-  };
+
+    const data = await response.json();
+    if (!data) {
+      throw new Error('No user data received');
+    }
+
+    setUser(data);
+    setAboutMe(data.aboutMe || '');
+    setImageUrl(data.imageUrl || '');
+    setPortfolioImages(data.portfolioImages || []);
+    setPortfolioVideo(data.portfolioVideo || null);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred');
+    // If unauthorized, redirect to login
+    if (err instanceof Error && err.message === 'Unauthorized') {
+      window.location.href = '/auth/login';
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'portfolio') => {
     const file = e.target.files?.[0];
