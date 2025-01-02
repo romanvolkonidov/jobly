@@ -1,83 +1,9 @@
+// app/auth/forgot-password/page.tsx
+//this file works in the following way: it renders the forgot password form
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { toast } from 'react-hot-toast';
+import ForgotPasswordForm from '@/src/components/auth/ForgotPasswordForm';
 
-const schema = z.object({
-  email: z.string().email('Please enter a valid email')
-});
-
-type FormData = z.infer<typeof schema>;
-
-export default function ForgotPasswordForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema)
-  });
-
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    try {
-      // Get CSRF token
-      const { token: csrfToken } = await fetch('/api/csrf').then(r => r.json());
-      
-      const verifyRes = await fetch('/api/auth/forgot-password/verify', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
-        },
-        body: JSON.stringify(data)
-      });
-      const verifyData = await verifyRes.json();
-   
-      if (verifyData.success && verifyData.resetToken) {
-        await fetch('/api/auth/forgot-password/send-email', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrfToken  
-          },
-          body: JSON.stringify({
-            email: data.email,
-            resetToken: verifyData.resetToken
-          })
-        });
-      }
-   
-      toast.success('If an account exists, a reset link has been sent.');
-    } catch (error) {
-      console.error('Password reset error:', error);
-      toast.error('Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-   };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <input
-          {...register('email')}
-          type="email"
-          placeholder="Enter your email"
-          disabled={isLoading}
-          className="w-full p-2 border rounded"
-        />
-        {errors.email && (
-          <p className="text-red-500 text-sm">{errors.email.message}</p>
-        )}
-      </div>
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-      >
-        {isLoading ? 'Sending...' : 'Reset Password'}
-      </button>
-    </form>
-  );
+export default function ForgotPasswordPage() {
+  return <ForgotPasswordForm />;
 }
