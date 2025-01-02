@@ -4,10 +4,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { Redis } from '@upstash/redis';
 
-
 const redis = new Redis({
-  url: "https://polished-rooster-26245.upstash.io", 
-  token: "AWaFAAIjcDFhMTZjNDk0OTQ1NjE0ZGU3YTE0NTAxMjM0NDFhN2YzN3AxMA"
+ url: process.env.UPSTASH_REDIS_URL!,
+ token: process.env.UPSTASH_REDIS_TOKEN!
 });
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
