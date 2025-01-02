@@ -32,13 +32,13 @@ function EmailVerification() {
           body: JSON.stringify({ token })
         });
 
-        if (!verifyResponse.ok) throw new Error('Verification failed');
+        const data = await verifyResponse.json();
+        if (!verifyResponse.ok) throw new Error(data.error || 'Verification failed');
 
         setStatus('success');
         setTimeout(() => {
           router.push('/auth/login');
         }, 2000);
-
       } catch (error) {
         console.error('Verification error:', error);
         setStatus('error');
@@ -50,6 +50,7 @@ function EmailVerification() {
 
     verifyEmail();
   }, [router, searchParams]);
+  // Rest of the component remains the same
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
