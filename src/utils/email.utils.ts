@@ -20,16 +20,23 @@ interface SendEmailParams {
 }
 
 export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
-  await transporter.sendMail({
-    from: `"${process.env.SENDER_NAME}" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html: `
-      <div style="font-family: ${tokens.typography.fontFamily.primary}; color: ${tokens.colors.gray[900]};">
-        ${html}
-      </div>
-    `
-  });
+  try {
+    const result = await transporter.sendMail({
+      from: `"${process.env.SENDER_NAME}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html: `
+        <div style="font-family: ${tokens.typography.fontFamily.primary}; color: ${tokens.colors.gray[900]};">
+          ${html}
+        </div>
+      `
+    });
+    console.log('Email sent:', result);
+    return result;
+  } catch (error) {
+    console.error('Email error:', error);
+    throw error;
+  }
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
