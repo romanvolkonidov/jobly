@@ -33,16 +33,23 @@ interface SendEmailParams {
 }
 
 export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
-  await resend.emails.send({
-    from: 'Jobly <onboarding@resend.dev>',
-    to,
-    subject,
-    html: `
-      <div style="font-family: ${mockTokens.typography.fontFamily.primary}; color: ${mockTokens.colors.gray[900]};">
-        ${html}
-      </div>
-    `
-  });
+  try {
+    console.log('Sending email to:', to);
+    const result = await resend.emails.send({
+      from: 'Jobly <onboarding@resend.dev>',
+      to,
+      subject,
+      html: `
+        <div style="font-family: ${mockTokens.typography.fontFamily.primary}; color: ${mockTokens.colors.gray[900]};">
+          ${html}
+        </div>
+      `
+    });
+    console.log('Email sent:', result);
+  } catch (error) {
+    console.error('Email error:', error);
+    throw error;
+  }
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
