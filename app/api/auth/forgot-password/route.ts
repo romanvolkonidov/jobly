@@ -43,6 +43,7 @@
 
         try {
           await sendEmail({
+            
             to: email,
             subject: 'Reset Your Jobly Password',
             html: `
