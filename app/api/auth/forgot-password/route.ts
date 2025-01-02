@@ -53,10 +53,20 @@ export const POST = rateLimiterMiddleware(
           `,
         });
         console.log('6. Reset email sent successfully');
-      } catch (emailError) {
-        console.error('7. Email sending failed:', emailError);
-        throw emailError;
-      }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          const smtpError = error as { response?: string };
+          console.error('7. Email sending failed:', {
+            error: error.message,
+            errorName: error.name,
+            stack: error.stack,
+            smtpResponse: smtpError.response
+          });
+        } else {
+          console.error('7. Unknown email error:', error);
+        }
+        throw error;
+       }
 
       return NextResponse.json(
         { message: 'If an account exists, a reset link has been sent.' },

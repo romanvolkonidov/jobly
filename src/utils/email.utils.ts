@@ -6,12 +6,22 @@ import { tokens } from '@/src/styles/tokens';
 const transporter = createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: true, // For port 465
+  secure: true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  logger: true, // Enable logging
+  debug: true // Include debug info
 });
+
+transporter.verify((error) => {
+  if (error) {
+    console.error('SMTP connection error:', error);
+  } else {
+    console.log('SMTP server ready'); 
+  }
+ });
 
 interface SendEmailParams {
   to: string;
