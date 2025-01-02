@@ -34,7 +34,7 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
-        destination: `http://dev-skillspot.com:3000/:path*`,
+        destination: 'https://jobly-iota.vercel.app/:path*',
       },
       {
         source: '/api/v1/:path*',
