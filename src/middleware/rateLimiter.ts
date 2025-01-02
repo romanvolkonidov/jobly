@@ -5,8 +5,8 @@ import type { NextRequest } from 'next/server';
 import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
- url: process.env.UPSTASH_REDIS_URL!,
- token: process.env.UPSTASH_REDIS_TOKEN!
+  url: `${process.env.UPSTASH_REDIS_URL}`,
+  token: `${process.env.UPSTASH_REDIS_TOKEN}`
 });
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
