@@ -1,49 +1,41 @@
+// app/api/auth/forgot-password/verify/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { generateResetToken } from '@/src/utils/password.utils';
 import { rateLimiterMiddleware } from '@/src/middleware/rateLimiter';
 import { csrfProtection } from '@/src/middleware/csrf';
 
 export const POST = rateLimiterMiddleware(
-  csrfProtection(async (req: Request) => {
-    try {
-      const { email } = await req.json();
-      console.log('Email verification started:', email);
+ csrfProtection(async (req: Request) => {
+   try {
+     const { token } = await req.json();
+     console.log('Token verification started:', token);
 
-      const user = await prisma.user.findUnique({
-        where: { email },
-        select: { email: true },
-      });
+     const user = await prisma.user.findFirst({
+       where: {
+         resetToken: token,
+         resetTokenExpiry: { gt: new Date() }
+       },
+       select: { id: true, email: true }
+     });
 
-      if (!user) {
-        return NextResponse.json(
-          { message: 'If an account exists, a reset link will be sent.' },
-          { status: 200 }
-        );
-      }
+     if (!user) {
+       return NextResponse.json(
+         { valid: false, message: 'Invalid or expired token' },
+         { status: 403 }
+       );
+     }
 
-      const resetToken = generateResetToken();
-      const resetTokenExpiry = new Date(Date.now() + 3600000);
+     return NextResponse.json({
+       valid: true,
+       email: user.email 
+     });
 
-      await prisma.user.update({
-        where: { email },
-        data: { resetToken, resetTokenExpiry },
-      });
-
-      return NextResponse.json(
-        {
-          success: true,
-          resetToken,
-          message: 'If an account exists, a reset link will be sent.',
-        },
-        { status: 200 }
-      );
-    } catch (error) {
-      console.error('Verification error:', error);
-      return NextResponse.json(
-        { message: 'Error processing request' },
-        { status: 500 }
-      );
-    }
-  })
+   } catch (error) {
+     console.error('Token verification error:', error);
+     return NextResponse.json(
+       { message: 'Error processing request' },
+       { status: 500 }
+     );
+   }
+ })
 );

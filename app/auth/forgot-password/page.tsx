@@ -21,24 +21,33 @@ export default function ForgotPasswordForm() {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
+      // Get CSRF token
+      const { token: csrfToken } = await fetch('/api/csrf').then(r => r.json());
+      
       const verifyRes = await fetch('/api/auth/forgot-password/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
         body: JSON.stringify(data)
       });
       const verifyData = await verifyRes.json();
-
+   
       if (verifyData.success && verifyData.resetToken) {
         await fetch('/api/auth/forgot-password/send-email', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken  
+          },
           body: JSON.stringify({
             email: data.email,
             resetToken: verifyData.resetToken
           })
         });
       }
-
+   
       toast.success('If an account exists, a reset link has been sent.');
     } catch (error) {
       console.error('Password reset error:', error);
@@ -46,7 +55,7 @@ export default function ForgotPasswordForm() {
     } finally {
       setIsLoading(false);
     }
-  };
+   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
