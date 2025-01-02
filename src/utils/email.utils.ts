@@ -2,12 +2,12 @@ import { createTransport } from 'nodemailer';
 import { tokens } from '@/src/styles/tokens';
 
 const transporter = createTransport({
- host: process.env.SMTP_HOST,
- port: Number(process.env.SMTP_PORT),
+ host: "smtp.zoho.com",
+ port: Number("465"),
  secure: true,
  auth: {
-   user: process.env.SMTP_USER,
-   pass: process.env.SMTP_PASS
+   user: "info@rv2class.com",
+   pass: "US2B5pCK00V6"
  },
  logger: true,
  debug: true
@@ -35,10 +35,10 @@ interface NodemailerError extends Error {
 export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
  console.log('Starting email send to:', to);
  console.log('Nodemailer config:', {
-   host: process.env.SMTP_HOST,
-   port: Number(process.env.SMTP_PORT),
-   user: process.env.SMTP_USER,
-   passLength: process.env.SMTP_PASS?.length
+  host: "smtp.zoho.com",
+  port: Number("465"),
+  user: "info@rv2class.com",
+  passLength: "US2B5pCK00V6"?.length
  });
 
  try {
@@ -72,7 +72,7 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
- const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`;
+ const verifyUrl = `${"https://jobly-3ymo.onrender.com"}/auth/verify-email?token=${token}`;
  
  await sendEmail({
    to: email,
