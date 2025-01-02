@@ -4,6 +4,15 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/src/lib/prisma";
 import { verifyPassword } from "@/src/utils/password.utils";
 
+async function testConnection() {
+  try {
+    await prisma.$connect()
+    console.log('Database connected')
+  } catch (e) {
+    console.error('Database connection failed:', e)
+  }
+}
+
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -14,6 +23,8 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        await testConnection() // Add this line
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Please enter your email and password");
         }
@@ -25,8 +36,11 @@ const handler = NextAuth({
         if (!user) {
           throw new Error("Invalid email or password");
         }
+        console.log('Found user:', user) // Before password check
+
 
         const isValid = await verifyPassword(credentials.password, user.password);
+        console.log('Password valid:', isValid)
 
         if (!isValid) {
           throw new Error("Invalid email or password");
