@@ -1,10 +1,10 @@
-// app/api/profile/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth";
+import { authOptions } from '../auth/[...nextauth]/route';
 
 export async function GET() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {
     return new NextResponse('Unauthorized', { status: 401 });
@@ -37,7 +37,7 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {
     return new NextResponse('Unauthorized', { status: 401 });

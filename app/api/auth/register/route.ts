@@ -1,30 +1,33 @@
-// app/api/auth/register/route.ts
 import { prisma } from '@/src/lib/prisma';
-import { NextResponse } from 'next/server';
+import { sendVerificationEmail } from '@/src/utils/email.utils';
 
 export async function POST(req: Request) {
-  try {
-    const { email, password, name } = await req.json();
+  const { email, password, name } = await req.json();
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password,
-        name,
-        imageUrl: null,
-        aboutMe: '',
-        location: null,
-        isWorker: false,
-        portfolioImages: [],
-        portfolioVideo: null
-      }
-    });
-
-    return NextResponse.json({ success: true, user });
-  } catch  {
-    return NextResponse.json(
-      { error: 'Failed to create profile' },
-      { status: 500 }
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    return new Response(
+      JSON.stringify({ error: 'Email already registered' }),
+      { status: 400 }
     );
   }
+
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.pendingUser.create({
+    data: {
+      email,
+      password,
+      name,
+      verificationCode,
+      verificationCodeExpires: codeExpiration,
+    },
+  });
+
+  await sendVerificationEmail(email, verificationCode);
+  return new Response(
+    JSON.stringify({ message: 'Check your email for verification code' }),
+    { status: 200 }
+  );
 }

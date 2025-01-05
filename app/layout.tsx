@@ -1,15 +1,9 @@
-// app/layout.tsx
-'use client';
-
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/src/components/common/navbar/index";
 import { Providers } from "./providers";
 import { Suspense } from "react";
-
-// Move CSRF generation to a server action or API route
-import { getCsrfToken } from "@/app/csrf";
-import { useEffect, useState } from "react";
+import { headers } from 'next/headers';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,16 +15,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [csrfToken, setCsrfToken] = useState("");
-
-  useEffect(() => {
-    getCsrfToken().then(setCsrfToken);
-  }, []);
+  const headersList = await headers();
+  const csrfToken = headersList.get('X-CSRF-Token') || '';
 
   return (
     <html lang="en">

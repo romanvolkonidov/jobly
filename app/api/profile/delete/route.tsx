@@ -1,33 +1,50 @@
 // app/api/profile/delete/route.ts
-//this file works in the following way: it deletes a user's profile
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import type { IronSessionData } from '@/src/types/session';
+import { getServerSession } from "next-auth";
+import { authOptions } from '../../auth/[...nextauth]/route';
+import { verifyToken } from '@/src/lib/csrf';
 
-export async function DELETE(req: Request) {
-  const session = await getIronSession<IronSessionData>(
-    req,
-    NextResponse.next(),
-    sessionConfig
-  );
-
-  if (!session.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function DELETE(request: Request) {
   try {
-    await prisma.user.delete({
-      where: { id: session.userId },
-    });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    session.destroy();
+    const csrfToken = request.headers.get('x-csrf-token');
+    if (!csrfToken || !verifyToken(csrfToken)) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    await prisma.$transaction([
+      // Delete reviews
+      prisma.review.deleteMany({
+        where: { OR: [{ fromUserId: session.user.id }, { toUserId: session.user.id }] }
+      }),
+      // Delete bot-related data
+      prisma.botConversation.deleteMany({ where: { userId: session.user.id } }),
+      prisma.botFile.deleteMany({
+        where: { project: { userId: session.user.id } }
+      }),
+      prisma.botProject.deleteMany({ where: { userId: session.user.id } }),
+      // Delete messages
+      prisma.message.deleteMany({
+        where: { OR: [{ fromUserId: session.user.id }, { toUserId: session.user.id }] }
+      }),
+      // Delete bids
+      prisma.bid.deleteMany({ where: { userId: session.user.id } }),
+      // Delete tasks
+      prisma.task.deleteMany({ where: { userId: session.user.id } }),
+      // Finally delete user
+      prisma.user.delete({ where: { id: session.user.id } })
+    ]);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete account error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete account' },
+      { error: 'Failed to delete account. Please try again later.' },
       { status: 500 }
     );
   }

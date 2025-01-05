@@ -1,53 +1,40 @@
-import { prisma } from '@/src/lib/prisma';
-import { rateLimiterMiddleware } from '@/src/middleware/rateLimiter';
-import { csrfProtection } from '@/src/middleware/csrf';
+// app/api/auth/verify-code/route.ts
 import { NextResponse } from 'next/server';
-import { sendVerificationEmail } from '@/src/utils/email.utils';
+import { prisma } from '@/src/lib/prisma';
 
-export const POST = rateLimiterMiddleware(
-  csrfProtection(async (req: Request) => {
-    try {
-      const { email, token } = await req.json();
-
-      if (!email || !token) {
-        return NextResponse.json(
-          { error: 'Email and token required' },
-          { status: 400 }
-        );
+export async function POST(req: Request) {
+  try {
+    const { code } = await req.json();
+    
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationCode: code,
+        verificationCodeExpires: { gt: new Date() },
+        emailVerified: false
       }
+    });
 
-      await sendVerificationEmail(email, token);
-
-      const user = await prisma.user.findUnique({
-        where: { verificationToken: token }
-      });
-
-      if (!user) {
-        return NextResponse.json(
-          { error: 'Invalid token' },
-          { status: 400 }
-        );
-      }
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          emailVerified: true,
-          verificationToken: null
-        }
-      });
-
-      return NextResponse.json({ 
-        success: true,
-        message: 'Email verified successfully'
-      });
-
-    } catch (error) {
-      console.error('Verification error:', error);
+    if (!user) {
       return NextResponse.json(
-        { error: 'Verification failed' },
-        { status: 500 }
+        { error: 'Invalid or expired code' },
+        { status: 400 }
       );
     }
-  })
-);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationCode: null,
+        verificationCodeExpires: null
+      }
+    });
+
+    return NextResponse.json({ message: 'Email verified successfully' });
+  } catch  {
+    return NextResponse.json(
+      { error: 'Verification failed' },
+      { status: 500 }
+    );
+  }
+}

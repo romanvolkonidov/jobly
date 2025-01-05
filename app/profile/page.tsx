@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { User } from '@prisma/client';
+import { useRouter } from 'next/navigation';
 import { ProfileHeader } from '@/src/components/profile/ProfileHeader';
 import { AboutSection } from '@/src/components/profile/AboutSection';
 import { PortfolioSection } from '@/src/components/profile/PortfolioSection';
+import { useSession } from 'next-auth/react';
 
 const MAX_IMAGES = 20;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -12,6 +14,8 @@ const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_VIDEO_DURATION = 120; // 2 minutes in seconds
 
 function ProfileContent() {
+  const router = useRouter();
+  const { status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutMe, setAboutMe] = useState('');
@@ -22,54 +26,43 @@ function ProfileContent() {
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Fetch user data on component mount
+
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/profile', { credentials: 'include' });
+
+      if (response.status === 401) {
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile data');
+      }
+
+      const data = await response.json();
+      if (!data) {
+        throw new Error('No user data received');
+      }
+
+      setUser(data);
+      setAboutMe(data.aboutMe || '');
+      setImageUrl(data.imageUrl || '');
+      setPortfolioImages(data.portfolioImages || []);
+      setPortfolioVideo(data.portfolioVideo || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]); // Add router as dependency since it's used inside
+
   useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  // Add this to your page components that require authentication
-useEffect(() => {
-  const checkSession = async () => {
-    const res = await fetch('/api/auth/check-session');
-    const data = await res.json();
-    if (!data.isLoggedIn) {
-      // Redirect to login
-      window.location.href = '/auth/login';
+    if (status === "authenticated") {
+      fetchUserData();
     }
-  };
-  checkSession();
-}, []);
-
-const fetchUserData = async () => {
-  try {
-    setIsLoading(true);
-    const response = await fetch('/api/profile', { credentials: 'include' });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Failed to fetch profile data');
-    }
-
-    const data = await response.json();
-    if (!data) {
-      throw new Error('No user data received');
-    }
-
-    setUser(data);
-    setAboutMe(data.aboutMe || '');
-    setImageUrl(data.imageUrl || '');
-    setPortfolioImages(data.portfolioImages || []);
-    setPortfolioVideo(data.portfolioVideo || null);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'An error occurred');
-    // If unauthorized, redirect to login
-    if (err instanceof Error && err.message === 'Unauthorized') {
-      window.location.href = '/auth/login';
-    }
-  } finally {
-    setIsLoading(false);
-  }
-};
+  }, [status, fetchUserData]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'portfolio') => {
     const file = e.target.files?.[0];
@@ -103,16 +96,21 @@ const fetchUserData = async () => {
         credentials: 'include',
       });
 
+      if (response.status === 401) {
+        return;
+      }
+
       if (!response.ok) throw new Error('Failed to upload image');
 
       const data = await response.json();
-
       if (type === 'profile') {
         setImageUrl(data.imageUrl);
-        setUser((prevUser) => (prevUser ? { ...prevUser, imageUrl: data.imageUrl } : prevUser));
+        setUser(prev => prev ? { ...prev, imageUrl: data.imageUrl } : null);
       } else {
-        setPortfolioImages((prev) => [...prev, data.imageUrl]);
+        setPortfolioImages(data.portfolioImages);
       }
+    
+    
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
@@ -155,6 +153,10 @@ const fetchUserData = async () => {
         credentials: 'include',
       });
 
+      if (response.status === 401) {
+        return;
+      }
+
       if (!response.ok) throw new Error('Failed to upload video');
 
       const data = await response.json();
@@ -166,12 +168,18 @@ const fetchUserData = async () => {
 
   const handleRemovePortfolioImage = async (imageUrl: string) => {
     try {
-      await fetch('/api/profile/portfolio-image', {
+      const response = await fetch('/api/profile/portfolio-image', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl }),
         credentials: 'include',
       });
+
+      if (response.status === 401) {
+        return;
+      }
+
+      if (!response.ok) throw new Error('Failed to remove image');
 
       setPortfolioImages((prev) => prev.filter((img) => img !== imageUrl));
     } catch {
@@ -181,13 +189,19 @@ const fetchUserData = async () => {
 
   const handleRemoveVideo = async () => {
     try {
-      await fetch('/api/profile/portfolio-video', {
+      const response = await fetch('/api/profile/portfolio-video', {
         method: 'DELETE',
         credentials: 'include',
       });
 
+      if (response.status === 401) {
+        return;
+      }
+
+      if (!response.ok) throw new Error('Failed to remove video');
+
       setPortfolioVideo(null);
-    } catch  {
+    } catch {
       setUploadError('Failed to remove video');
     }
   };
@@ -200,11 +214,17 @@ const fetchUserData = async () => {
         body: JSON.stringify({ aboutMe }),
         credentials: 'include',
       });
-
+  
+      if (response.status === 401) {
+        return;
+      }
+  
       if (!response.ok) throw new Error('Failed to update profile');
-
+  
+      const data = await response.json();
+      setUser(data); // Add this line
       setEditingAbout(false);
-    } catch  {
+    } catch {
       setError('Failed to update profile');
     }
   };
@@ -227,30 +247,54 @@ const fetchUserData = async () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <ProfileHeader user={user} imageUrl={imageUrl} onImageUpload={handleImageUpload} />
-      <AboutSection aboutMe={aboutMe} editingAbout={editingAbout} setEditingAbout={setEditingAbout} setAboutMe={setAboutMe} onSubmit={handleAboutMeSubmit} />
-      <PortfolioSection
-        portfolioImages={portfolioImages}
-        portfolioVideo={portfolioVideo}
-        uploadError={uploadError}
-        onImageUpload={handleImageUpload}
-        onVideoUpload={handleVideoUpload}
-        onRemoveImage={handleRemovePortfolioImage}
-        onRemoveVideo={handleRemoveVideo}
+      <ProfileHeader 
+        user={user} 
+        imageUrl={imageUrl} 
+        onImageUpload={handleImageUpload} 
       />
+      <AboutSection 
+        aboutMe={aboutMe} 
+        editingAbout={editingAbout} 
+        setEditingAbout={setEditingAbout} 
+        setAboutMe={setAboutMe} 
+        onSubmit={handleAboutMeSubmit} 
+      />
+<PortfolioSection
+  portfolioImages={portfolioImages}
+  portfolioVideo={portfolioVideo}
+  uploadError={uploadError}
+  onImageUpload={handleImageUpload}
+  onVideoUpload={handleVideoUpload}
+  onRemoveImage={handleRemovePortfolioImage}
+  onRemoveVideo={handleRemoveVideo}
+/>
     </div>
   );
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push('/auth/login');
+    },
+  });
+
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-pulse text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-pulse text-gray-600">Loading profile...</div>
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-pulse text-gray-600">Loading profile...</div>
+      </div>
+    }>
       <ProfileContent />
     </Suspense>
   );

@@ -1,12 +1,14 @@
-// src/types/iron.d.ts
-//this file works in the following way: it extends the IronSessionData interface from the iron-session package
-import 'iron-session';
+// src/types/next-auth.d.ts
+import 'next-auth'
 
-declare module 'iron-session' {
-  interface IronSessionData {
-    userId?: string; // Optional for flexibility during session initialization
-    isAuthenticated?: boolean; // A common addition for authentication checks
-    role?: string; // Optional role field for role-based access control (e.g., "admin", "user")
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+    } & {
+      name?: string | null
+      email?: string | null
+      image?: string | null
+    }
   }
 }
-

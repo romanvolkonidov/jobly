@@ -1,39 +1,28 @@
 // app/api/messages/conversations/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import type { IronSessionData } from '@/src/types/session';
+import { getServerSession } from "next-auth";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    console.log('Fetching conversations...');
-    
-    // Get session data
-    const session = await getIronSession<IronSessionData>(request, NextResponse.next(), sessionConfig);
-    console.log('Session data:', session);
-
-    if (!session.userId) {
-      console.log('No user ID in session');
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Log user ID
-    console.log('User ID:', session.userId);
-
-    // Fetch all tasks
     const tasks = await prisma.task.findMany({
       where: {
         OR: [
-          { userId: session.userId },
-          { bids: { some: { userId: session.userId } } }
+          { userId: session.user.id },
+          { bids: { some: { userId: session.user.id } } }
         ]
       },
       select: {
         id: true,
         title: true,
         createdAt: true,
-        userId: true, // Add this
+        userId: true,
         createdBy: {
           select: {
             id: true,
@@ -64,44 +53,26 @@ export async function GET(request: Request) {
       }
     });
 
-    console.log('Found tasks:', tasks);
+    const conversations = tasks.map(task => ({
+      id: task.id,
+      otherUserId: task.userId === session.user.id 
+        ? task.bids[0]?.createdBy.id 
+        : task.createdBy.id,
+      otherUserName: task.userId === session.user.id 
+        ? task.bids[0]?.createdBy.name 
+        : task.createdBy.name,
+      otherUserImage: task.userId === session.user.id 
+        ? task.bids[0]?.createdBy.imageUrl 
+        : task.createdBy.imageUrl,
+      taskId: task.id,
+      taskTitle: task.title,
+      lastMessage: task.messages[0]?.content ?? 'No messages yet',
+      timestamp: task.messages[0]?.createdAt ?? task.createdAt
+    }));
 
-
-// app/api/messages/conversations/route.ts
-
-const conversations = tasks.map(task => {
-  const lastMessage = task.messages[0];
-  // Get all bids for this task that aren't from current user
-  const otherUserBid = task.bids.find(bid => bid.userId !== session.userId);
-  
-  const otherUser = task.userId === session.userId 
-    ? otherUserBid?.createdBy  // If I created task, show bidder
-    : task.createdBy;          // If I'm bidder, show task creator
-
-  if (!otherUser) {
-    console.log('Missing other user for task:', task.id);
-  }
-
-  return {
-    id: task.id,
-    otherUserId: otherUser?.id ?? "",
-    otherUserName: otherUser?.name ?? "Unknown User",
-    otherUserImage: otherUser?.imageUrl,
-    taskId: task.id,
-    taskTitle: task.title,
-    lastMessage: lastMessage?.content ?? 'No messages yet',
-    timestamp: lastMessage?.createdAt ?? task.createdAt
-  };
-});
-
-    console.log('Formatted conversations:', conversations);
     return NextResponse.json(conversations);
-
   } catch (error) {
-    console.error('Detailed error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch conversations',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }

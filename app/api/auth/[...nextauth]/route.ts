@@ -1,21 +1,36 @@
-import NextAuth from "next-auth";
+//app/api/auth/[...nextauth]/route.ts
+
+import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/src/lib/prisma";
 import { verifyPassword } from "@/src/utils/password.utils";
 
-async function testConnection() {
-  try {
-    await prisma.$connect()
-    console.log('Database connected')
-  } catch (e) {
-    console.error('Database connection failed:', e)
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+    } & DefaultSession["user"]
+  }
+
+  interface User {
+    id: string;
+    email: string;
+    name: string;
   }
 }
 
-const handler = NextAuth({
-  secret: "test-secret-temporary", // Temporary for testing
+async function testConnection() {
+  try {
+    await prisma.$connect();
+    console.log('Database connected');
+  } catch (e) {
+    console.error('Database connection failed:', e);
+  }
+}
 
+export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "test-secret-temporary",
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -25,7 +40,7 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        await testConnection() // Add this line
+        await testConnection();
 
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Please enter your email and password");
@@ -38,11 +53,8 @@ const handler = NextAuth({
         if (!user) {
           throw new Error("Invalid email or password");
         }
-        console.log('Found user:', user) // Before password check
-
 
         const isValid = await verifyPassword(credentials.password, user.password);
-        console.log('Password valid:', isValid)
 
         if (!isValid) {
           throw new Error("Invalid email or password");
@@ -68,7 +80,7 @@ const handler = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session?.user) {
         session.user.id = token.id as string;
       }
       return session;
@@ -76,12 +88,15 @@ const handler = NextAuth({
   },
   pages: {
     signIn: '/auth/login',
-    error: '/auth/error'
+    error: '/auth/login'
   },
   session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60 // 24 hours
+    strategy: "jwt" as const,
+    maxAge: 24 * 60 * 60
   }
-});
+};
 
-export { handler as GET, handler as POST };
+const handler = NextAuth(authOptions);
+
+export const GET = handler;
+export const POST = handler;

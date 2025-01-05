@@ -1,64 +1,43 @@
+// app/api/auth/forgot-password/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { sendEmail } from '@/src/utils/email.utils';
-import { generateResetToken } from '@/src/utils/password.utils';
-import { rateLimiterMiddleware } from '@/src/middleware/rateLimiter';
-import { csrfProtection } from '@/src/middleware/csrf';
+import { sendResetCode } from '@/src/utils/email.utils';
 
-export const POST = rateLimiterMiddleware(
-  csrfProtection(async (req: Request) => {
-    try {
-      console.log('Config:', {
-        RESEND_API_KEY: !!process.env.RESEND_API_KEY,
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-        RESEND_API_KEY_VALUE: process.env.RESEND_API_KEY?.substring(0, 5) + '...'
+export async function POST(req: Request) {
+  try {
+    const { email } = await req.json();
+
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return NextResponse.json({
+        message: 'If an account exists, a reset code has been sent'
       });
-
-      const { email } = await req.json();
-      console.log('Processing reset for:', email);
-      
-      const user = await prisma.user.findUnique({ 
-        where: { email },
-        select: { id: true, email: true }
-      });
-
-      console.log('User found:', !!user);
-      
-      if (!user) {
-        return NextResponse.json({ message: 'If account exists, reset link sent' }, { status: 200 });
-      }
-
-      const resetToken = generateResetToken();
-      const resetTokenExpiry = new Date(Date.now() + 3600000);
-
-      await prisma.user.update({
-        where: { email },
-        data: { resetToken, resetTokenExpiry },
-      });
-
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${resetToken}`;
-
-      try {
-        console.log('Sending reset email...');
-        const emailResult = await sendEmail({
-          to: email,
-          subject: 'Reset Your Password',
-          html: `
-            <h2>Password Reset Request</h2>
-            <p>Click to reset your password (valid for 1 hour):</p>
-            <a href="${resetUrl}" style="background:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;">Reset Password</a>
-          `
-        });
-        console.log('Email result:', emailResult);
-      } catch (emailError) {
-        console.error('Email send error:', emailError);
-        throw emailError;
-      }
-
-      return NextResponse.json({ message: 'If account exists, reset link sent' }, { status: 200 });
-    } catch (error) {
-      console.error('Reset process error:', error);
-      return NextResponse.json({ message: 'Error processing request' }, { status: 500 });
     }
-  })
-);
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: resetCode,
+        resetPasswordExpires: resetExpires
+      }
+    });
+
+    await sendResetCode(email, resetCode);
+
+    return NextResponse.json({
+      message: 'If an account exists, a reset code has been sent'
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      { status: 500 }
+    );
+  }
+}

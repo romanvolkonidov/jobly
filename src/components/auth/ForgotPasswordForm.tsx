@@ -1,13 +1,15 @@
-// src/components/auth/ForgotPasswordForm.tsx
-
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { authStyles } from '@/src/styles/auth.styles';
 
 export default function ForgotPasswordForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,23 +17,27 @@ export default function ForgotPasswordForm() {
     setStatus('loading');
 
     try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      if (!csrfToken) {
-        throw new Error('CSRF token not found');
-      }
-
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
-        },
-        body: JSON.stringify({ email })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
-      setMessage(data.message);
-      setStatus(response.ok ? 'success' : 'error');
+
+      if (response.ok) {
+        setStatus('success');
+        setMessage(data.message);
+        // Store email for the reset page
+        sessionStorage.setItem('resetEmail', email);
+        // Redirect to reset page after showing success message
+        setTimeout(() => {
+          router.push('/auth/verify-reset');
+        }, 2000);
+      } else {
+        setStatus('error');
+        setMessage(data.error || 'An error occurred');
+      }
     } catch {
       setStatus('error');
       setMessage('An error occurred. Please try again.');
@@ -43,9 +49,10 @@ export default function ForgotPasswordForm() {
       <Card className={authStyles.wrapper}>
         <div className={authStyles.formContainer}>
           <h1 className={authStyles.title}>Reset Your Password</h1>
-          
+
           <p className={authStyles.description}>
-            Enter your email address and we&apos;ll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a verification
+            code.
           </p>
 
           <form onSubmit={handleSubmit} className={authStyles.form}>
@@ -65,7 +72,11 @@ export default function ForgotPasswordForm() {
             </div>
 
             {message && (
-              <div className={authStyles.message(status === 'error' ? 'error' : 'success')}>
+              <div
+                className={authStyles.message(
+                  status === 'error' ? 'error' : 'success'
+                )}
+              >
                 {message}
               </div>
             )}
@@ -75,14 +86,11 @@ export default function ForgotPasswordForm() {
               disabled={status === 'loading'}
               className={authStyles.button}
             >
-              {status === 'loading' ? 'Sending...' : 'Reset Password'}
+              {status === 'loading' ? 'Sending...' : 'Send Reset Code'}
             </button>
 
             <div className="text-center mt-4">
-              <Link 
-                href="/auth/login" 
-                className={authStyles.link}
-              >
+              <Link href="/auth/login" className={authStyles.link}>
                 Back to Sign In
               </Link>
             </div>

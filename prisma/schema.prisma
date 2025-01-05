@@ -7,12 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model PendingUser {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  password                String
+  name                    String
+  verificationCode        String
+  verificationCodeExpires DateTime
+  createdAt              DateTime  @default(now())
+}
+
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
   password          String
   name              String
-  emailVerified     Boolean   @default(false)
+  resetPasswordToken     String?
+  resetPasswordExpires   DateTime?
+  verificationCode       String?
+  verificationCodeExpires DateTime?
+  emailVerified         Boolean   @default(false)
   verificationToken String?   @unique
   resetToken        String?   @unique
   resetTokenExpiry  DateTime?
@@ -110,4 +124,38 @@ model Review {
   @@index([fromUserId])
   @@index([toUserId])
   @@index([taskId])
+}
+
+// Bot-related models
+model BotProject {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  context   String
+  userId    String
+  files     BotFile[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model BotFile {
+  id        String     @id @default(cuid())
+  name      String
+  path      String
+  projectId String
+  project   BotProject @relation(fields: [projectId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@index([projectId])
+}
+
+model BotConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  messages  Json[]   // Stores conversation history
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

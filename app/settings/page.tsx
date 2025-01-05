@@ -1,55 +1,70 @@
-//app/settings/page.tsx
-//this file works in the following way: it renders the settings page
+// app/settings/page.tsx
 'use client';
 
-import { useState, Suspense, useEffect } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
+import { signOut, useSession } from "next-auth/react";
+import { useToast } from "@/src/components/ui/use-toast"
 
 function SettingsContent() {
+  const { toast } = useToast();
+
+  const { status } = useSession();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Add this to your page components that require authentication
-useEffect(() => {
-  const checkSession = async () => {
-    const res = await fetch('/api/auth/check-session');
-    const data = await res.json();
-    if (!data.isLoggedIn) {
-      // Redirect to login
-      window.location.href = '/auth/login';
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/auth/login');
     }
-  };
-  checkSession();
-}, []);
+  }, [status, router]);
 
   const handleDeleteAccount = async () => {
     try {
       setIsDeleting(true);
-      setError(null);
+      
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf');
+      const { token } = await csrfResponse.json();
       
       const response = await fetch('/api/profile/delete', {
         method: 'DELETE',
         headers: {
+          'x-csrf-token': token,
           'Content-Type': 'application/json'
         },
         credentials: 'include'
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to delete account');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete account');
       }
 
-      router.push('/auth/logout');
+      await signOut({ callbackUrl: '/auth/login' });
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been successfully deleted.",
+        variant: "default",
+      });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete account');
-      console.error('Error deleting account:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to delete account',
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
     }
   };
+
+  if (status === "loading") {
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -57,12 +72,6 @@ useEffect(() => {
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">
-            {error}
-          </div>
-        )}
 
         {!showConfirm ? (
           <button
@@ -101,13 +110,11 @@ useEffect(() => {
 
 export default function SettingsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-pulse text-gray-600">Loading settings...</div>
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-pulse text-gray-600">Loading settings...</div>
+      </div>
+    }>
       <SettingsContent />
     </Suspense>
   );

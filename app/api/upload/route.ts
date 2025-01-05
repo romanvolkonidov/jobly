@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import { IronSessionData } from 'iron-session';
+import { getServerSession } from "next-auth";
+import { authOptions } from '../auth/[...nextauth]/route';
 
 export async function POST(req: NextRequest) {
-  const session = await getIronSession(req, NextResponse.next(), sessionConfig) as IronSessionData;
+  const session = await getServerSession(authOptions);
 
-  if (!session?.userId) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -25,32 +24,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid upload type' }, { status: 400 });
     }
 
-    // Convert file to Base64 for storage
     const buffer = await file.arrayBuffer();
     const base64Image = Buffer.from(buffer).toString('base64');
     const imageUrl = `data:${file.type};base64,${base64Image}`;
 
-    let updatedUser;
-
     if (type === 'profile') {
-      // Update profile picture
-      updatedUser = await prisma.user.update({
-        where: { id: session.userId },
+      await prisma.user.update({
+        where: { id: session.user.id },
         data: { imageUrl },
       });
     } else {
-      // Update portfolio images
-      const user = await prisma.user.findUnique({ where: { id: session.userId } });
+      const user = await prisma.user.findUnique({ where: { id: session.user.id } });
       const updatedPortfolio = [...(user?.portfolioImages || []), imageUrl];
-      updatedUser = await prisma.user.update({
-        where: { id: session.userId },
+      await prisma.user.update({
+        where: { id: session.user.id },
         data: { portfolioImages: updatedPortfolio },
       });
     }
-
-    // Return updated user data
-    return NextResponse.json({ user: updatedUser });
-  } catch (error) {
+    
+    return NextResponse.json({ imageUrl });
+    } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }

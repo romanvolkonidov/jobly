@@ -1,26 +1,23 @@
-//app/api/profile/portfolio-image/route.ts
-//this file works in the following way: it deletes a user's portfolio image
+// app/api/profile/portfolio-image/route.ts
 import { NextResponse } from 'next/server';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import type { IronSessionData } from '@/src/types/session';
+import { getServerSession } from "next-auth";
+import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/src/lib/prisma';
 
 export async function DELETE(req: Request) {
-  try {
-    const session = await getIronSession<IronSessionData>(
-      req,
-      NextResponse.next(),
-      sessionConfig
-    );
-    if (!session.userId) {
+  const auth = await authOptions();
+  const session = await getServerSession(auth);
+    try {
+   
+    
+    if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const { imageUrl } = await req.json();
 
     const user = await prisma.user.findUnique({
-      where: { id: session.userId },
+      where: { id: session.user.id },
       select: { portfolioImages: true },
     });
 
@@ -28,12 +25,10 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const updatedImages = user.portfolioImages.filter(
-      (img) => img !== imageUrl
-    );
+    const updatedImages = user.portfolioImages.filter((img) => img !== imageUrl);
 
     await prisma.user.update({
-      where: { id: session.userId },
+      where: { id: session.user.id },
       data: { portfolioImages: updatedImages },
     });
 

@@ -1,15 +1,12 @@
-// app/api/tasks/create/route.ts
-//this is the route that creates a new task
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
-import { getIronSession } from 'iron-session';
-import { sessionConfig } from '@/src/middleware/session';
-import type { IronSessionData } from '@/src/types/session';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(req: Request) {
   try {
-    const session = await getIronSession<IronSessionData>(req, NextResponse.next(), sessionConfig);
-    if (!session.userId) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,11 +14,11 @@ export async function POST(req: Request) {
 
     const task = await prisma.task.create({
       data: {
-        title: taskData.name, // Make sure this matches your schema
+        title: taskData.name,
         description: taskData.description,
         budget: taskData.budget,
         status: taskData.status,
-        userId: session.userId,
+        userId: session.user.id,
       }
     });
 

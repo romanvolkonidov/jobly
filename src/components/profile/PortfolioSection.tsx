@@ -12,10 +12,12 @@ interface PortfolioSectionProps {
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onRemoveImage: (imageUrl: string) => Promise<void>;
   onRemoveVideo: () => Promise<void>;
+  portfolioImages?: string[];  // Make it optional
+
 }
 
 export const PortfolioSection = ({
-  portfolioImages,
+  portfolioImages, // Remove the default value here since it's causing the clash
   portfolioVideo,
   uploadError,
   onImageUpload,
