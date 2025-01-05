@@ -1,7 +1,3 @@
 module.exports = {
-  extends: ["next/core-web-vitals"],
-  rules: {
-    "@typescript-eslint/no-unused-vars": "error",
-    "no-unused-vars": "off"
-  }
+  extends: 'next/core-web-vitals'
 }
