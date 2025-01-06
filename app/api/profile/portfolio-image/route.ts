@@ -1,7 +1,7 @@
 // app/api/profile/portfolio-image/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "@/app/api/auth/auth-options";
 import { prisma } from '@/src/lib/prisma';
 
 export async function DELETE(req: Request) {
