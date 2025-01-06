@@ -2,12 +2,14 @@ import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
+import { Dispatch, SetStateAction } from 'react';
 
 interface Props {
-  imageUrl: string;  // other props remain same
+  imageUrl: string;
+  isUserMenuOpen: boolean;
+  setIsUserMenuOpenAction: Dispatch<SetStateAction<boolean>>;
+  onLogoutAction: () => Promise<void>;
 }
-
-
 
 export function UserMenu({
   isUserMenuOpen,
@@ -21,7 +23,7 @@ export function UserMenu({
   const handleLogout = async () => {
     try {
       await signOut({ redirect: false });
-      onLogoutAction();
+      await onLogoutAction();
       setIsUserMenuOpenAction(false);
     } catch (error) {
       console.error('Logout error:', error);
@@ -34,15 +36,16 @@ export function UserMenu({
         <button 
           onClick={() => setIsUserMenuOpenAction(!isUserMenuOpen)}
           className="flex items-center space-x-2"
+          aria-label="Open user menu"
         >
-<Image
-src={imageUrl}
-alt="Profile"
-width={40}
-height={40}
-className="rounded-full"
-priority
-/>
+          <Image
+            src={imageUrl}
+            alt="Profile"
+            width={40}
+            height={40}
+            className="rounded-full"
+            priority
+          />
         </button>
       ) : (
         <div className="flex space-x-2">

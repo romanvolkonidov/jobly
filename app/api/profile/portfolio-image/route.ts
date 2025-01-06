@@ -5,11 +5,9 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/src/lib/prisma';
 
 export async function DELETE(req: Request) {
-  const auth = await authOptions();
-  const session = await getServerSession(auth);
-    try {
-   
-    
+  const session = await getServerSession(authOptions);  // Only pass authOptions
+  
+  try {   
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }

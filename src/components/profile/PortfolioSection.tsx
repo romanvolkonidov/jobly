@@ -1,4 +1,3 @@
-// src/components/profile/PortfolioSection.tsx
 import React from 'react';
 import Image from 'next/image';
 import { X, Upload, Video } from 'lucide-react';
@@ -12,12 +11,10 @@ interface PortfolioSectionProps {
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onRemoveImage: (imageUrl: string) => Promise<void>;
   onRemoveVideo: () => Promise<void>;
-  portfolioImages?: string[];  // Make it optional
-
 }
 
 export const PortfolioSection = ({
-  portfolioImages, // Remove the default value here since it's causing the clash
+  portfolioImages = [], // Provide default value here instead of in the interface
   portfolioVideo,
   uploadError,
   onImageUpload,
@@ -43,6 +40,7 @@ export const PortfolioSection = ({
               <button
                 onClick={() => onRemoveImage(img)}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Remove image"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -73,6 +71,7 @@ export const PortfolioSection = ({
             <button
               onClick={onRemoveVideo}
               className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+              aria-label="Remove video"
             >
               <X className="w-4 h-4" />
             </button>
@@ -95,7 +94,7 @@ export const PortfolioSection = ({
       </div>
 
       {uploadError && (
-        <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md">
+        <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md" role="alert">
           {uploadError}
         </div>
       )}

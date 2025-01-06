@@ -1,3 +1,4 @@
+//app/profile/page.tsx
 'use client';
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
@@ -14,7 +15,6 @@ const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_VIDEO_DURATION = 120; // 2 minutes in seconds
 
 function ProfileContent() {
-  const router = useRouter();
   const { status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [editingAbout, setEditingAbout] = useState(false);
@@ -32,20 +32,20 @@ function ProfileContent() {
     try {
       setIsLoading(true);
       const response = await fetch('/api/profile', { credentials: 'include' });
-
+  
       if (response.status === 401) {
         return;
       }
-
+  
       if (!response.ok) {
         throw new Error('Failed to fetch profile data');
       }
-
+  
       const data = await response.json();
       if (!data) {
         throw new Error('No user data received');
       }
-
+  
       setUser(data);
       setAboutMe(data.aboutMe || '');
       setImageUrl(data.imageUrl || '');
@@ -56,7 +56,7 @@ function ProfileContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]); // Add router as dependency since it's used inside
+  }, []); // Add router as dependency since it's used inside
 
   useEffect(() => {
     if (status === "authenticated") {
