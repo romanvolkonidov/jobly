@@ -227,7 +227,7 @@ const handleSendMessage = async (e: React.FormEvent) => {
       <div className="flex items-center gap-3">
       <Image
   src={conv.otherUserImage || '/default-avatar.png'}
-  alt={conv.otherUserName}
+  alt={conv.otherUserFirstName}
   width={40}
   height={40}
   className="rounded-full object-cover cursor-pointer"

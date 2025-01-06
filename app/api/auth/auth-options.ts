@@ -6,11 +6,13 @@ import { verifyPassword } from '@/src/utils/password.utils';
 
 declare module 'next-auth' {
   interface Session extends DefaultSession {
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-    } & DefaultSession['user'];
+user: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  image?: string | null;
+}
   }
 
   interface User {
@@ -73,7 +75,6 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          name: user.name, // Keep temporarily until full migration
         };
       },
     }),

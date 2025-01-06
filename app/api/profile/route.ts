@@ -17,7 +17,6 @@ export async function GET() {
       id: true,
       firstName: true,
       lastName: true,
-      name: true, // Keep temporarily until full migration
       email: true,
       imageUrl: true,
       aboutMe: true,
@@ -59,7 +58,6 @@ export async function PUT(req: Request) {
       id: true,
       firstName: true,
       lastName: true,
-      name: true, // Keep temporarily until full migration
       email: true,
       imageUrl: true,
       aboutMe: true,

@@ -11,7 +11,6 @@ model PendingUser {
   id                      String    @id @default(cuid())
   email                   String    @unique
   password                String
-  name                    String
   firstName               String
   lastName                String
   verificationCode        String
@@ -23,7 +22,6 @@ model User {
   id                String    @id @default(cuid())
   email             String    @unique
   password          String
-  name              String
   firstName         String
   lastName          String
   resetPasswordToken     String?

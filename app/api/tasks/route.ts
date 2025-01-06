@@ -41,7 +41,6 @@ export async function GET(req: Request) {
           select: {
             firstName: true,
             lastName: true,
-            name: true, // Keep temporarily until full migration
             rating: true,
             reviewCount: true,
           },
