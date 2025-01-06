@@ -6,7 +6,10 @@ import Link from 'next/link';
 
 interface ProfileData {
   imageUrl: string;
-  name: string;
+  // Change this line
+  firstName: string;
+  lastName: string;
+  // End of change
   rating?: number;
   reviewCount: number;
   aboutMe?: string;
@@ -74,16 +77,19 @@ const fetchProfileData = useCallback(async () => {
             <div className="space-y-6">
               {/* Profile Header */}
               <div className="flex items-center space-x-4">
-                <Image
-                  src={profileData.imageUrl || '/default-avatar.png'}
-                  alt={profileData.name}
-                  width={80}
-                  height={80}
-                  className="rounded-full"
-                />
+              <Image
+  src={profileData.imageUrl || '/default-avatar.png'}
+  // Change this line
+  alt={`${profileData.firstName} ${profileData.lastName}`}
+  width={80}
+  height={80}
+  className="rounded-full"
+/>
                 <div>
-                  <h3 className="text-xl font-semibold">{profileData.name}</h3>
-                  <div className="flex items-center mt-1">
+                <h3 className="text-xl font-semibold">
+    {/* Change this line */}
+    {`${profileData.firstName} ${profileData.lastName}`}
+  </h3>                  <div className="flex items-center mt-1">
                     <span className="text-yellow-400">★</span>
                     <span className="ml-1">{profileData.rating?.toFixed(1) || '0.0'}</span>
                     <span className="ml-1 text-gray-600">({profileData.reviewCount} reviews)</span>

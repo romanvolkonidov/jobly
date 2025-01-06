@@ -26,7 +26,9 @@ export async function POST(req: Request) {
     const user = await prisma.user.create({
       data: {
         email: pendingUser.email,
-        name: pendingUser.name,
+        firstName: pendingUser.firstName,
+        lastName: pendingUser.lastName,
+        name: `${pendingUser.firstName} ${pendingUser.lastName}`, // Keep temporarily
         password: hashedPassword,
         emailVerified: true
       }

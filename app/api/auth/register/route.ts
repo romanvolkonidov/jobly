@@ -2,7 +2,7 @@ import { prisma } from '@/src/lib/prisma';
 import { sendVerificationEmail } from '@/src/utils/email.utils';
 
 export async function POST(req: Request) {
-  const { email, password, name } = await req.json();
+  const { email, password, firstName, lastName } = await req.json();
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -19,7 +19,9 @@ export async function POST(req: Request) {
     data: {
       email,
       password,
-      name,
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`, // Keep this while 'name' exists in schema
       verificationCode,
       verificationCodeExpires: codeExpiration,
     },

@@ -15,7 +15,9 @@ export async function GET() {
     where: { id: session.user.id },
     select: {
       id: true,
-      name: true,
+      firstName: true,
+      lastName: true,
+      name: true, // Keep temporarily until full migration
       email: true,
       imageUrl: true,
       aboutMe: true,
@@ -34,7 +36,12 @@ export async function GET() {
     return new NextResponse('User not found', { status: 404 });
   }
 
-  return NextResponse.json(user);
+  const response = {
+    ...user,
+    fullName: `${user.firstName} ${user.lastName}` // Add convenience field
+  };
+
+  return NextResponse.json(response);
 }
 
 export async function PUT(req: Request) {
@@ -50,7 +57,9 @@ export async function PUT(req: Request) {
     data: { aboutMe: data.aboutMe },
     select: {
       id: true,
-      name: true,
+      firstName: true,
+      lastName: true,
+      name: true, // Keep temporarily until full migration
       email: true,
       imageUrl: true,
       aboutMe: true,
@@ -65,5 +74,10 @@ export async function PUT(req: Request) {
     }
   });
   
-  return NextResponse.json(user);
+  const response = {
+    ...user,
+    fullName: `${user.firstName} ${user.lastName}` // Add convenience field
+  };
+
+  return NextResponse.json(response);
 }

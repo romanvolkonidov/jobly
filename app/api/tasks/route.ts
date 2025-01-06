@@ -1,5 +1,4 @@
 // app/api/tasks/route.ts
-//this is the route that fetches all tasks
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
@@ -40,7 +39,9 @@ export async function GET(req: Request) {
       include: {
         createdBy: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
+            name: true, // Keep temporarily until full migration
             rating: true,
             reviewCount: true,
           },
@@ -58,8 +59,17 @@ export async function GET(req: Request) {
       take: limit,
     });
 
+    // Transform the tasks to include fullName
+    const transformedTasks = tasks.map(task => ({
+      ...task,
+      createdBy: {
+        ...task.createdBy,
+        fullName: `${task.createdBy.firstName} ${task.createdBy.lastName}`
+      }
+    }));
+
     return NextResponse.json({
-      tasks,
+      tasks: transformedTasks,
       pagination: {
         total,
         pages: Math.ceil(total / limit),

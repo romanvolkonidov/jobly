@@ -1,5 +1,3 @@
-//src/components/common/navbar/DesktopMenu.tsx
-//this file works in the following way: it contains the desktop menu for the navbar
 'use client';
 
 import { withLazyLoading } from '@/src/components/common/Performance';
@@ -8,7 +6,7 @@ import Link from 'next/link';
 import { categories } from '@/src/data/categories';
 
 interface DesktopMenuProps {
-  isLoggedIn: boolean; // Add this prop
+  isLoggedIn: boolean;
 }
 
 function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
@@ -40,7 +38,7 @@ function DesktopMenu({ isLoggedIn }: DesktopMenuProps) {
         Find Tasks
       </Link>
       
-      {isLoggedIn && ( // Only show My Projects when logged in
+      {isLoggedIn && (
         <Link href="/projects" className="text-lg text-gray-700 hover:text-gray-900">
           My Projects
         </Link>

@@ -66,7 +66,6 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/profile/:path*', 
-    '/tasks/:path*',
     '/settings/:path*'  // Added this line
   ]
 }

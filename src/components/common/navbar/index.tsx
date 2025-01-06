@@ -14,7 +14,8 @@ import { UserMenu } from './UserMenu';
 
 interface UserData {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   imageUrl: string;
   aboutMe?: string;

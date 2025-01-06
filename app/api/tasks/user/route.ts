@@ -22,13 +22,23 @@ export async function GET() {
         bids: true,
         createdBy: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
     });
 
-    return NextResponse.json({ tasks });
+    // Transform the tasks to include fullName
+    const transformedTasks = tasks.map(task => ({
+      ...task,
+      createdBy: {
+        ...task.createdBy,
+        fullName: `${task.createdBy.firstName} ${task.createdBy.lastName}`
+      }
+    }));
+
+    return NextResponse.json({ tasks: transformedTasks });
   } catch (error) {
     console.error('Error fetching user tasks:', error);
     return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 });

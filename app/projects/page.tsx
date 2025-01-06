@@ -22,7 +22,8 @@ interface Task {
   createdAt: string;
   bids: Bid[];
   createdBy: {
-    name: string;
+    firstName: string;
+    lastName: string;
   };
 }
 export default function ProjectsPage() {

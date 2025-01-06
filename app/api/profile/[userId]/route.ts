@@ -14,7 +14,9 @@ export async function GET(req: Request) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        name: true,
+        firstName: true,
+        lastName: true,
+        name: true, // Keep temporarily until full migration
         imageUrl: true,
         rating: true,
         reviewCount: true,
@@ -28,7 +30,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    // Create response object with full name
+    const response = {
+      ...user,
+      fullName: `${user.firstName} ${user.lastName}`
+    };
+
+    return NextResponse.json(response);
   } catch {
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }

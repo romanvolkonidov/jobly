@@ -12,6 +12,8 @@ model PendingUser {
   email                   String    @unique
   password                String
   name                    String
+  firstName               String
+  lastName                String
   verificationCode        String
   verificationCodeExpires DateTime
   createdAt              DateTime  @default(now())
@@ -22,6 +24,8 @@ model User {
   email             String    @unique
   password          String
   name              String
+  firstName         String
+  lastName          String
   resetPasswordToken     String?
   resetPasswordExpires   DateTime?
   verificationCode       String?

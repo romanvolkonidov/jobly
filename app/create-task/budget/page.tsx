@@ -1,33 +1,36 @@
-//app/create-task/budget/page.tsx
-//this file works in the following way: it renders the budget form
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import AuthModal from '@/src/components/common/modals/AuthModal';
 
 export default function BudgetPage() {
   const [budget, setBudget] = useState('');
   const [needsBusinessDoc, setNeedsBusinessDoc] = useState(false);
   const [error, setError] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleContinue = async () => {
+    if (!session) {
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
       if (!budget) {
         setError('Please enter a budget');
         return;
       }
-  
-      // Get existing task data from localStorage
+
       const taskData = JSON.parse(localStorage.getItem('taskData') || '{}');
       
-      // Create task in database
       const response = await fetch('/api/tasks/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Don't forget CSRF token if needed
-          'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify({
           ...taskData,
@@ -36,16 +39,24 @@ export default function BudgetPage() {
           status: 'open'
         })
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to create task');
       }
-  
+
       router.push('/projects');
     } catch (error) {
       console.error('Error saving task:', error);
       setError('Something went wrong. Please try again.');
     }
+  };
+
+  const handleLogin = () => {
+    router.push('/api/auth/signin');
+  };
+
+  const handleSignup = () => {
+    router.push('/api/auth/signin');
   };
 
   return (
@@ -119,6 +130,13 @@ export default function BudgetPage() {
           </button>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={handleLogin}
+        onSignup={handleSignup}
+      />
     </div>
   );
 }

@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const task = await prisma.task.create({
       data: {
-        title: taskData.name,
+        title: taskData.title, // Changed from name to title for consistency
         description: taskData.description,
         budget: taskData.budget,
         status: taskData.status,

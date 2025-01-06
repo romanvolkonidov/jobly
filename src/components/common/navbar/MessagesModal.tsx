@@ -8,7 +8,8 @@ import ProfilePreviewModal from './ProfilePreviewModal';
 interface Message {
   id: string;
   otherUserId: string;
-  otherUserName: string;
+  otherUserFirstName: string;
+  otherUserLastName: string;
   otherUserImage: string | null;
   taskId: string;
   taskTitle: string;
@@ -236,8 +237,11 @@ const handleSendMessage = async (e: React.FormEvent) => {
   }}
 />
 <div>
-  <div className="font-medium">{conv.otherUserName}</div>
-  <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
+<div className="font-medium">
+    
+    {`${conv.otherUserFirstName} ${conv.otherUserLastName}`}
+    
+  </div>  <div className="text-sm text-gray-500 truncate">{conv.lastMessage}</div>
   <div className="text-xs text-gray-400 mt-1">
     {new Date(conv.timestamp).toLocaleDateString()}
   </div>

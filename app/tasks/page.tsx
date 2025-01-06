@@ -21,7 +21,8 @@ interface Task {
   title: string;
   budget: number;
   createdBy: {
-    name: string;
+    firstName: string;
+    lastName: string;
     rating: number;
     reviewCount: number;
   };
@@ -209,8 +210,7 @@ export default function TaskSearchPage() {
                         KES {task.budget?.toLocaleString() ?? 'Budget not set'}
                       </span>
                       <div className="text-sm text-gray-600">
-                        Posted by {task.createdBy.name.split(' ')[0]}
-                      </div>
+                      Posted by {task.createdBy.firstName}                      </div>
                     </div>
                     <div className="flex items-center space-x-4 text-sm">
                       <span className="text-yellow-600">

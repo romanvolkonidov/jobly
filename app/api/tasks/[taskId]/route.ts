@@ -1,6 +1,4 @@
 //app/api/tasks/[taskId]/route.ts
-//this file works in the following way: it fetches a task by its ID
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
@@ -12,7 +10,8 @@ export async function GET(request: Request) {
       include: {
         createdBy: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -22,7 +21,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    return NextResponse.json(task);
+    // Transform the task to include fullName
+    const transformedTask = {
+      ...task,
+      createdBy: {
+        ...task.createdBy,
+        fullName: `${task.createdBy.firstName} ${task.createdBy.lastName}`
+      }
+    };
+
+    return NextResponse.json(transformedTask);
   } catch (error) {
     console.error('Error fetching task:', error);
     return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 });

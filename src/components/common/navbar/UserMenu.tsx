@@ -4,6 +4,17 @@ import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 
+declare module "next-auth" {
+  interface Session {
+    user?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    }
+  }
+}
+
 interface Props {
   imageUrl: string;
   isUserMenuOpen: boolean;
@@ -33,20 +44,23 @@ export function UserMenu({
   return (
     <div className="relative">
       {isAuthenticated ? (
-        <button 
-          onClick={() => setIsUserMenuOpenAction(!isUserMenuOpen)}
-          className="flex items-center space-x-2"
-          aria-label="Open user menu"
-        >
-          <Image
-            src={imageUrl}
-            alt="Profile"
-            width={40}
-            height={40}
-            className="rounded-full"
-            priority
-          />
-        </button>
+<button 
+  onClick={() => setIsUserMenuOpenAction(!isUserMenuOpen)}
+  className="flex items-center space-x-2"
+  aria-label="Open user menu"
+>
+  <Image
+    src={imageUrl}
+    alt={session?.user ? `${session.user.firstName} ${session.user.lastName}` : 'Profile'}
+    width={40}
+    height={40}
+    className="rounded-full"
+    priority
+  />
+  <span className="hidden md:inline">
+    {session?.user ? `${session.user.firstName} ${session.user.lastName}` : ''}
+  </span>
+</button>
       ) : (
         <div className="flex space-x-2">
           <Link href="/auth/signup" className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">
