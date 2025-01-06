@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getServerSession } from "next-auth";
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
+import { authOptions } from "@/app/api/auth/auth-options";
 export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
