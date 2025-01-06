@@ -4,13 +4,15 @@ import { User } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 
 // Add this at the top of the file
+// useProfileData.ts
 declare module "next-auth" {
   interface Session {
-    user?: {
+    user: {
       id: string;
       firstName: string;
       lastName: string;
-      email: string;
+      email?: string | null;
+      image?: string | null;
     }
   }
 }

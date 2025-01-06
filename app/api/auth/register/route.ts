@@ -21,7 +21,6 @@ export async function POST(req: Request) {
       password,
       firstName,
       lastName,
-      name: `${firstName} ${lastName}`, // Keep this while 'name' exists in schema
       verificationCode,
       verificationCodeExpires: codeExpiration,
     },

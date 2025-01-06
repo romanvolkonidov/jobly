@@ -6,11 +6,12 @@ import { Dispatch, SetStateAction } from 'react';
 
 declare module "next-auth" {
   interface Session {
-    user?: {
+    user: {
       id: string;
       firstName: string;
       lastName: string;
-      email: string;
+      email?: string | null;
+      image?: string | null;
     }
   }
 }
