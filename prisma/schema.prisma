@@ -68,6 +68,8 @@ model Task {
   subcategory String?
   bids        Bid[]     @relation("TaskBids")
   messages    Message[] @relation("TaskMessages")
+  needsBusinessDoc Boolean @default(false)
+
   createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
 
   @@index([userId])

@@ -1,73 +1,68 @@
-// src/components/auth/ResetPasswordForm.tsx
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authStyles } from '@/src/styles/auth.styles'
 import { Card } from '@/src/components/ui/Card';
+import toast from 'react-hot-toast';
 
 export default function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
-// src/components/auth/ResetPasswordForm.tsx
-// Update the handleSubmit function:
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (newPassword !== confirmPassword) {
-    setStatus('error');
-    setMessage('Passwords do not match');
-    return;
-  }
-
-  setStatus('loading');
-
-  try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (!csrfToken) {
-      throw new Error('CSRF token not found');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
     }
 
-    // Reset password
-    const response = await fetch('/api/auth/reset-password', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-csrf-token': csrfToken
-      },
-      body: JSON.stringify({ token, newPassword })
-    });
+    setLoading(true);
 
-    const data = await response.json();
-    setMessage(data.message);
-    
-    if (response.ok) {
-      setStatus('success');
-      // Send confirmation email
-      await fetch('/api/auth/send-reset-confirmation', {
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (!csrfToken) {
+        throw new Error('CSRF token not found');
+      }
+
+      // Reset password
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken
         },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({ token, newPassword })
       });
+
+      const data = await response.json();
       
-      // Show success message briefly before redirect
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 2000);
-    } else {
-      setStatus('error');
+      if (response.ok) {
+        toast.success('Password reset successfully!');
+        
+        // Send confirmation email
+        await fetch('/api/auth/send-reset-confirmation', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken
+          },
+          body: JSON.stringify({ token })
+        });
+        
+        // Redirect after showing success message
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 2000);
+      } else {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch  {
-    setStatus('error');
-    setMessage('An error occurred. Please try again.');
-  }
-};
+  };
 
   return (
     <div className={authStyles.container}>
@@ -106,18 +101,12 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {message && (
-              <div className={authStyles.message(status === 'error' ? 'error' : 'success')}>
-                {message}
-              </div>
-            )}
-
             <button
               type="submit"
-              disabled={status === 'loading'}
+              disabled={loading}
               className={authStyles.button}
             >
-              {status === 'loading' ? 'Resetting...' : 'Reset Password'}
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
         </div>

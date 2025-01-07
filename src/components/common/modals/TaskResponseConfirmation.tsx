@@ -1,16 +1,16 @@
-//src/components/common/modals/TaskResponseConfirmation.tsx
-
 import { X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 interface TaskResponseConfirmationProps {
   isOpen: boolean;
   onClose: () => void;
+  isLoading?: boolean;
 }
 
 export default function TaskResponseConfirmation({
   isOpen,
-  onClose
+  onClose,
+  isLoading = false
 }: TaskResponseConfirmationProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +37,7 @@ export default function TaskResponseConfirmation({
             <h2 id="modal-title" className="text-xl font-semibold text-gray-900">Response Sent</h2>
             <button
               onClick={onClose}
+              disabled={isLoading}
               className="text-gray-400 hover:text-gray-600 p-2"
               aria-label="Close modal"
             >
@@ -50,9 +51,32 @@ export default function TaskResponseConfirmation({
 
           <button
             onClick={onClose}
-            className="w-full bg-primary-blue text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-blue/90 transition-colors"
+            disabled={isLoading}
+            className="w-full bg-primary-blue text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-blue/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            OK
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle 
+                    className="opacity-25" 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4" 
+                    fill="none" 
+                  />
+                  <path 
+                    className="opacity-75" 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" 
+                  />
+                </svg>
+                Loading...
+              </span>
+            ) : (
+              'OK'
+            )}
           </button>
         </div>
       </div>

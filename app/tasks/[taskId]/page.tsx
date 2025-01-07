@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Eye, Calendar, Tag, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
 import TaskResponseConfirmation from '@/src/components/common/modals/TaskResponseConfirmation';
 
 interface Task {
@@ -17,11 +18,18 @@ interface Task {
   subcategory: string;
 }
 
+interface UserProfile {
+  imageUrl: string | null;
+  portfolioVideo: string | null;
+  aboutMe: string | null;
+}
+
 export default function TaskDetailsPage() {
   const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
   const [task, setTask] = useState<Task | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [price, setPrice] = useState('');
@@ -31,6 +39,23 @@ export default function TaskDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const formatCurrency = (amount: number) => amount.toLocaleString('en-US');
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        const data = await response.json();
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    if (session?.user) {
+      fetchUserProfile();
+    }
+  }, [session]);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -50,11 +75,33 @@ export default function TaskDetailsPage() {
     }
   }, [params.taskId]);
 
+  const validateProfile = () => {
+    if (!userProfile?.imageUrl) {
+      toast.error('Please add a profile picture before responding');
+      return false;
+    }
+    if (!userProfile?.portfolioVideo) {
+      toast.error('Please add a portfolio video before responding');
+      return false;
+    }
+    if (!userProfile?.aboutMe) {
+      toast.error('Please complete your about me section before responding');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!session) {
       setShowAuthModal(true);
+      return;
+    }
+
+    if (!validateProfile()) {
+      setIsModalOpen(false);
+      router.push('/profile');
       return;
     }
 
@@ -79,7 +126,9 @@ export default function TaskDetailsPage() {
       setPrice('');
       setMessage('');
       setShowConfirmation(true);
+      toast.success('Response submitted successfully');
     } catch (error) {
+      toast.error('Failed to submit your response');
       setError('Failed to submit your response. Please try again later.');
       console.error('Error submitting response:', error);
     }

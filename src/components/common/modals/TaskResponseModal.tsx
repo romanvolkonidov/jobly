@@ -1,5 +1,3 @@
-// src/components/common/modals/TaskResponseModal.tsx
-//this file works in the following way: it contains the modal for responding to a task
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
@@ -76,6 +74,7 @@ export default function TaskResponseModal({
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
               aria-label="Close"
+              disabled={isSubmitting}
             >
               <X className="w-6 h-6" />
             </button>
@@ -89,7 +88,7 @@ export default function TaskResponseModal({
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-primary-blue"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-primary-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Enter amount in KES"
                   disabled={isSubmitting}
                 />
@@ -104,7 +103,7 @@ export default function TaskResponseModal({
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg h-32 resize-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue"
+                className="w-full px-4 py-3 border rounded-lg h-32 resize-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Describe your experience and explain why you should be chosen for this task"
                 disabled={isSubmitting}
               />
@@ -114,12 +113,32 @@ export default function TaskResponseModal({
 
             <button
               type="submit"
-              className={`w-full bg-primary-blue text-white py-4 px-6 rounded-lg font-medium ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-blue/90'
-              } transition-colors`}
+              className="w-full bg-primary-blue text-white py-4 px-6 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-primary-blue/90 transition-colors"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Send Response'}
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4" 
+                      fill="none" 
+                    />
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" 
+                    />
+                  </svg>
+                  Submitting...
+                </span>
+              ) : (
+                'Send Response'
+              )}
             </button>
           </form>
         </div>

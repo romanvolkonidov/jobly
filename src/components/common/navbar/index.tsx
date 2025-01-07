@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 import { Bell } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import MenuToggle from './MenuToggle';
 import MobileMenu from './MobileMenu';
 import DesktopMenu from './DesktopMenu';
@@ -27,8 +27,6 @@ interface UserData {
   completedTasks: number;
   reviewCount: number;
   taskRating?: number;
-
-  // Add other user data properties if needed
 }
 
 function Navbar() {
@@ -38,12 +36,17 @@ function Navbar() {
   const { data: session, status } = useSession();
   const isAuthenticated = !!session;
   const [userImageUrl, setUserImageUrl] = useState<string>('/default-avatar.png');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!session?.user?.id) return;
+      if (!session?.user?.id) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
+        setIsLoading(true);
         const response = await fetch('/api/profile', { credentials: 'include' });
         if (!response.ok) {
           console.error('Failed to fetch user data:', response.statusText);
@@ -53,6 +56,8 @@ function Navbar() {
         setUserImageUrl(userData.imageUrl || '/default-avatar.png');
       } catch (error) {
         console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -61,41 +66,68 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       await signOut({ redirect: false });
       router.push('/auth/login');
     } catch (error) {
       console.error('Error during logout:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || isLoading) {
     return (
-      <div className="fixed w-full top-0 z-50 flex justify-center items-center h-16 bg-white border-b">
-        <span className="text-gray-600">Loading...</span>
+      <div className="fixed w-full top-0 z-50 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+          <div className="flex items-center justify-between h-full">
+            <div className="w-24 h-8 bg-gray-200 rounded animate-pulse" />
+            <div className="flex space-x-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <nav className="fixed w-full top-0 z-50 bg-white border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+    <motion.nav 
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed w-full top-0 z-50 bg-white border-b"
+    >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="font-bold text-lg text-blue-600">
+          <Link 
+            href="/" 
+            className="font-bold text-lg text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          >
             Skill Spot
           </Link>
-          <DesktopMenu isLoggedIn={isAuthenticated} />
+          <DesktopMenu isLoggedIn={isAuthenticated} isLoading={isLoading} />
         </div>
 
         <div className="flex items-center space-x-4">
           {isAuthenticated && (
             <>
-              <MessagesButton />
-              <button 
-                className="p-2 hover:bg-gray-100 rounded-full"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <MessagesButton />
+              </motion.div>
+              <motion.button 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
                 aria-label="Notifications"
               >
                 <Bell className="w-6 h-6 text-gray-600" />
-              </button>
+              </motion.button>
             </>
           )}
           <MenuToggle
@@ -103,27 +135,34 @@ function Navbar() {
             setIsMobileMenuOpen={setIsMobileMenuOpen}
           />
           {!isMobileMenuOpen && (
-            <div className="hidden md:flex">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2, delay: 0.2 }}
+              className="hidden md:flex"
+            >
               <UserMenu
                 isUserMenuOpen={isUserMenuOpen}
                 setIsUserMenuOpenAction={setIsUserMenuOpen}
                 onLogoutAction={handleLogout}
                 imageUrl={userImageUrl}
+                isLoading={isLoading}
               />
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isMobileMenuOpen && (
           <MobileMenu
             closeAction={() => setIsMobileMenuOpen(false)}
             imageUrl={userImageUrl}
+            isLoading={isLoading}
           />
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
   );
 }
 

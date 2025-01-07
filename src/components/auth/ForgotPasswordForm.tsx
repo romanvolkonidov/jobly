@@ -3,14 +3,12 @@ import { Card } from '@/src/components/ui/Card';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authStyles } from '@/src/styles/auth.styles';
+import toast from 'react-hot-toast';
 
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,21 +24,18 @@ export default function ForgotPasswordForm() {
       const data = await response.json();
 
       if (response.ok) {
-        setStatus('success');
-        setMessage(data.message);
-        // Store email for the reset page
+        toast.success(data.message);
         sessionStorage.setItem('resetEmail', email);
-        // Redirect to reset page after showing success message
         setTimeout(() => {
           router.push('/auth/verify-reset');
         }, 2000);
       } else {
-        setStatus('error');
-        setMessage(data.error || 'An error occurred');
+        toast.error(data.error || 'An error occurred');
       }
     } catch {
-      setStatus('error');
-      setMessage('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setStatus('idle');
     }
   };
 
@@ -70,16 +65,6 @@ export default function ForgotPasswordForm() {
                 placeholder="Enter your email"
               />
             </div>
-
-            {message && (
-              <div
-                className={authStyles.message(
-                  status === 'error' ? 'error' : 'success'
-                )}
-              >
-                {message}
-              </div>
-            )}
 
             <button
               type="submit"

@@ -1,22 +1,25 @@
-// app/auth/login/page.tsx
 'use client';
 
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
   const verified = searchParams.get('verified') === 'true';
+
+  useEffect(() => {
+    if (verified) {
+      toast.success('Email verified successfully! Please sign in.');
+    }
+  }, [verified]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setError('');
 
     const formData = new FormData(event.currentTarget);
 
@@ -29,13 +32,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
 
       router.push('/');
-        } catch  {
-      setError('An unexpected error occurred');
+    } catch {
+      toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -49,20 +52,6 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
         </div>
-
-        {verified && (
-          <div className="rounded-md bg-green-50 p-4">
-            <div className="text-sm text-green-700">
-              Email verified successfully! Please sign in.
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">{error}</div>
-          </div>
-        )}
 
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
@@ -108,7 +97,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <button
+          <button
               type="submit"
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

@@ -21,9 +21,10 @@ declare module "next-auth" {
 interface MobileMenuProps {
   closeAction: () => void;
   imageUrl: string;
+  isLoading?: boolean;
 }
 
-function MobileMenu({ closeAction, imageUrl }: MobileMenuProps) {
+function MobileMenu({ closeAction, imageUrl, isLoading = false }: MobileMenuProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const isAuthenticated = !!session;
@@ -32,8 +33,31 @@ function MobileMenu({ closeAction, imageUrl }: MobileMenuProps) {
     closeAction();
     setTimeout(() => {
       router.push(path);
-    }, 300); // Match animation duration
+    }, 300);
   };
+
+  const profileItems: Array<{
+    label: string;
+    path: string;
+    primary?: boolean;
+  }> = isAuthenticated ? [
+    { label: 'Profile', path: '/profile' },
+    { label: 'Settings', path: '/settings' },
+    { label: 'Logout', path: '/auth/logout' }
+  ] : [
+    { label: 'Login', path: '/auth/login', primary: true },
+    { label: 'Sign Up', path: '/auth/signup', primary: true }
+  ];
+
+  const menuItems: Array<{
+    label: string;
+    path: string;
+    requireAuth?: boolean;
+  }> = [
+    { label: 'Find Tasks', path: '/tasks', requireAuth: false },
+    { label: 'My Projects', path: '/projects', requireAuth: true },
+    { label: 'Create a task', path: '/categories', requireAuth: false },
+  ];
 
   return (
     <motion.div
@@ -46,93 +70,91 @@ function MobileMenu({ closeAction, imageUrl }: MobileMenuProps) {
       <div className="flex justify-between mb-8">
         {isAuthenticated && (
           <div className="flex flex-col items-center">
-            <Image
-              src={imageUrl}
-              alt="Profile Picture"
-              width={160}
-              height={160}
-              className="rounded-lg mb-3"
-              priority
-            />
-            <span className="text-xl font-semibold text-center">
-              {session?.user?.firstName ? 
-                `${session.user.firstName} ${session.user.lastName}` : 
-                'User'}
-            </span>
+            {isLoading ? (
+              <>
+                <div className="w-40 h-40 rounded-lg bg-gray-200 animate-pulse mb-3" />
+                <div className="h-6 w-32 bg-gray-200 animate-pulse rounded" />
+              </>
+            ) : (
+              <>
+                <Image
+                  src={imageUrl}
+                  alt="Profile Picture"
+                  width={160}
+                  height={160}
+                  className="rounded-lg mb-3 transition-opacity duration-200"
+                  priority
+                />
+                <motion.span 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xl font-semibold text-center"
+                >
+                  {session?.user?.firstName ? 
+                    `${session.user.firstName} ${session.user.lastName}` : 
+                    'User'}
+                </motion.span>
+              </>
+            )}
           </div>
         )}
         <button
           onClick={closeAction}
-          className="h-fit text-gray-600 hover:text-gray-900 focus:outline-none"
+          className="h-fit text-gray-600 hover:text-gray-900 focus:outline-none transition-colors duration-200"
+          disabled={isLoading}
         >
           ✕
         </button>
       </div>
 
       <nav className="space-y-4">
-        <button 
-          onClick={() => handleNavigation('/tasks')} 
-          className="w-full text-left p-4 text-lg font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          Find Tasks
-        </button>
-        
-        {isAuthenticated && (
-          <button 
-            onClick={() => handleNavigation('/projects')} 
-            className="w-full text-left p-4 text-lg font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            My Projects
-          </button>
-        )}
-        
-        <button 
-          onClick={() => handleNavigation('/categories')} 
-          className="w-full text-left p-4 text-lg font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          Create a task
-        </button>
+        {menuItems.map((item, index) => (
+          (!item.requireAuth || isAuthenticated) && (
+            <motion.button 
+              key={item.path}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              onClick={() => handleNavigation(item.path)}
+              className="w-full text-left p-4 text-lg font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
+              {item.label}
+            </motion.button>
+          )
+        ))}
 
-        <div className="pt-4 border-t border-gray-200">
-          {isAuthenticated ? (
-            <>
-              <button 
-                onClick={() => handleNavigation('/profile')} 
-                className="w-full text-left p-4 text-md text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Profile
-              </button>
-              <button 
-                onClick={() => handleNavigation('/settings')} 
-                className="w-full text-left p-4 text-md text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Settings
-                </button>
-                <button 
-                onClick={() => handleNavigation('/auth/logout')} 
-                className="w-full text-left p-4 text-md text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <div className="space-y-2">
-              <button 
-                onClick={() => handleNavigation('/auth/login')} 
-                className="w-full p-4 text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Login
-              </button>
-              <button 
-                onClick={() => handleNavigation('/auth/signup')} 
-                className="w-full p-4 text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Sign Up
-              </button>
-            </div>
-          )}
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="pt-4 border-t border-gray-200"
+        >
+          {profileItems.map((item, index) => (
+            <motion.button
+              key={item.path}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + (index * 0.1) }}
+              onClick={() => handleNavigation(item.path)}
+              className={`w-full text-left p-4 text-md transition-all duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                item.primary 
+                  ? 'text-white bg-blue-600 hover:bg-blue-700 text-center mb-2'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+              disabled={isLoading}
+            >
+              {item.label}
+            </motion.button>
+          ))}
+        </motion.div>
       </nav>
+
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      )}
     </motion.div>
   );
 }

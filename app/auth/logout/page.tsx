@@ -3,16 +3,15 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     const formData = new FormData(e.currentTarget);
     
@@ -24,12 +23,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success('Successfully signed in!');
         router.push('/dashboard');
       }
     } catch {
-      setError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -39,12 +39,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center">Sign In</h2>
-        
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-md p-4">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

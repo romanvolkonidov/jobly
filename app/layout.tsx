@@ -4,8 +4,8 @@ import { Providers } from "./providers";
 import { Suspense } from "react";
 import { headers } from 'next/headers';
 import { GeistSans, GeistMono } from 'geist/font';
+import { Toaster } from 'react-hot-toast'; // Add this import
 
-// The fonts are already configured, we don't need to call them again
 const geistSans = GeistSans;
 const geistMono = GeistMono;
 
@@ -24,6 +24,16 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
           <Navbar />
           <main className="pt-16">
             <Suspense fallback={

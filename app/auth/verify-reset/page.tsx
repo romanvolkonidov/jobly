@@ -1,24 +1,22 @@
-// app/auth/verify-reset/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import { authStyles } from '@/src/styles/auth.styles';
+import toast from 'react-hot-toast';
 
 export default function VerifyResetPage() {
   const router = useRouter();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('resetEmail');
     if (!storedEmail) {
+      toast.error('Please request a password reset first');
       router.push('/auth/forgot-password');
     } else {
       setEmail(storedEmail);
@@ -40,7 +38,7 @@ export default function VerifyResetPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('loading');
+    setLoading(true);
 
     try {
       const response = await fetch('/api/auth/verify-reset-code', {
@@ -56,17 +54,16 @@ export default function VerifyResetPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setStatus('success');
-        setMessage('Password reset successful! Redirecting to login...');
+        toast.success('Password reset successful!');
         sessionStorage.removeItem('resetEmail');
         setTimeout(() => router.push('/auth/login'), 2000);
       } else {
-        setStatus('error');
-        setMessage(data.error || 'Verification failed');
+        toast.error(data.error || 'Verification failed');
       }
     } catch {
-      setStatus('error');
-      setMessage('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,24 +103,12 @@ export default function VerifyResetPage() {
               />
             </div>
 
-            {message && (
-              <div
-                className={authStyles.message(
-                  status === 'error' ? 'error' : 'success'
-                )}
-              >
-                {message}
-              </div>
-            )}
-
             <button
               type="submit"
-              disabled={
-                status === 'loading' || code.join('').length !== 6 || !password
-              }
+              disabled={loading || code.join('').length !== 6 || !password}
               className={authStyles.button}
             >
-              {status === 'loading' ? 'Verifying...' : 'Reset Password'}
+              {loading ? 'Verifying...' : 'Reset Password'}
             </button>
           </form>
         </div>

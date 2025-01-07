@@ -1,65 +1,49 @@
-import { NextResponse } from 'next/server';
+import {  NextResponse } from 'next/server';
+import { prisma } from '@/src/lib/prisma';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/auth-options";
-import { prisma } from '@/src/lib/prisma';
-
+// app/api/profile/portfolio-video/route.ts
 export async function POST(req: Request) {
-  try {
-    console.log('Starting video upload...');
-    
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      console.log('No session found');
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-    console.log('Session found for user:', session.user.id);
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
+  try {
     const formData = await req.formData();
     const file = formData.get('video') as File;
 
     if (!file) {
-      console.log('No file found in request');
       return NextResponse.json({ error: 'No video provided' }, { status: 400 });
     }
-    
-    console.log('Received file:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
 
-    const allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
-    if (!allowedVideoTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Only MP4 and MOV videos are allowed' }, { status: 400 });
-    }
-
-    if (file.size > 100 * 1024 * 1024) {
-      console.log('File too large:', file.size);
+    const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+    if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: 'Video must be less than 100MB' }, { status: 400 });
     }
 
-    console.log('Processing video file...');
+    // Process in chunks
     const buffer = await file.arrayBuffer();
-    const base64Video = Buffer.from(buffer).toString('base64');
+    const chunks: Buffer[] = [];
+    const chunkSize = 5 * 1024 * 1024; // 5MB chunks
+
+    for (let i = 0; i < buffer.byteLength; i += chunkSize) {
+      const chunk = Buffer.from(buffer.slice(i, i + chunkSize));
+      chunks.push(chunk);
+    }
+
+    const base64Video = Buffer.concat(chunks).toString('base64');
     const videoUrl = `data:${file.type};base64,${base64Video}`;
-    console.log('Video processed, URL length:', videoUrl.length);
 
-    const user = await prisma.user.update({
+    await prisma.user.update({
       where: { id: session.user.id },
-      data: { portfolioVideo: videoUrl },
-      select: {
-        id: true,
-        portfolioVideo: true
-      }
+      data: { portfolioVideo: videoUrl }
     });
-    console.log('Database updated successfully');
 
-    return NextResponse.json({ videoUrl: user.portfolioVideo });
+    return NextResponse.json({ videoUrl });
   } catch (error) {
     console.error('Video upload error:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Upload failed',
-      details: error
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

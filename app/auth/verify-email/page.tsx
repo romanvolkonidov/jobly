@@ -1,14 +1,12 @@
-// app/auth/verify-email/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import toast from 'react-hot-toast';
 
 const VerifyEmail = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -26,7 +24,6 @@ const VerifyEmail = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const verificationCode = code.join('');
@@ -40,15 +37,20 @@ const VerifyEmail = () => {
 
       if (!res.ok) throw new Error(data.error || 'Verification failed');
 
-      setSuccess(true);
-      await signIn('credentials', {
+      toast.success('Email verified successfully!');
+      
+      const signInResult = await signIn('credentials', {
         email: data.email,
         password: data.password,
         redirect: true,
         callbackUrl: '/'
       });
+
+      if (signInResult?.error) {
+        toast.error('Failed to sign in automatically. Please try signing in manually.');
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Invalid code or code expired');
+      toast.error(error instanceof Error ? error.message : 'Invalid code or code expired');
     } finally {
       setLoading(false);
     }
@@ -66,43 +68,29 @@ const VerifyEmail = () => {
           </p>
         </div>
 
-        {success ? (
-          <div className="rounded-md bg-green-50 p-4">
-            <div className="text-sm text-green-700">
-              Email verified successfully!
-            </div>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="flex justify-center space-x-2">
+            {code.map((digit, index) => (
+              <input
+                key={index}
+                id={`code-${index}`}
+                type="text"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(index, e.target.value)}
+                className="w-12 h-12 text-center text-2xl border-2 rounded-md focus:border-blue-500 focus:ring-blue-500"
+              />
+            ))}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
 
-            <div className="flex justify-center space-x-2">
-              {code.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`code-${index}`}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  className="w-12 h-12 text-center text-2xl border-2 rounded-md focus:border-blue-500 focus:ring-blue-500"
-                />
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || code.join('').length !== 6}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Verifying...' : 'Verify Email'}
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={loading || code.join('').length !== 6}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {loading ? 'Verifying...' : 'Verify Email'}
+          </button>
+        </form>
       </div>
     </div>
   );

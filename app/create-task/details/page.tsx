@@ -1,30 +1,29 @@
-//app/create-task/details/page.tsx
-//this file works in the following way: it renders the task details form
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function TaskDetailsPage() {
   const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleContinue = () => {
     if (!description.trim()) {
-      setError('Please describe your task');
+      toast.error('Please describe your task');
       return;
     }
 
-    // Store details in localStorage
-    const taskData = JSON.parse(localStorage.getItem('taskData') || '{}');
-    localStorage.setItem('taskData', JSON.stringify({
-      ...taskData,
-      description
-    }));
-
-    // Navigate to budget page
-    router.push('/create-task/budget');
+    try {
+      const taskData = JSON.parse(localStorage.getItem('taskData') || '{}');
+      localStorage.setItem('taskData', JSON.stringify({
+        ...taskData,
+        description
+      }));
+      router.push('/create-task/budget');
+    } catch {
+      toast.error('Failed to save task details. Please try again.');
+    }
   };
 
   return (
@@ -42,17 +41,10 @@ export default function TaskDetailsPage() {
           </label>
           <textarea
             value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              setError('');
-            }}
-            className={`w-full p-4 border rounded-lg min-h-[200px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-              ${error ? 'border-red-500' : 'border-gray-300'}`}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-4 border rounded-lg min-h-[200px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300"
             placeholder="Describe your task in detail. Include all important information that workers should know."
           />
-          {error && (
-            <p className="mt-2 text-sm text-red-600">{error}</p>
-          )}
         </div>
 
         <div className="flex gap-4">

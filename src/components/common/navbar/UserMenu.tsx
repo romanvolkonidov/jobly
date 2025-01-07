@@ -17,10 +17,11 @@ declare module "next-auth" {
 }
 
 interface Props {
-  imageUrl: string;
   isUserMenuOpen: boolean;
   setIsUserMenuOpenAction: Dispatch<SetStateAction<boolean>>;
   onLogoutAction: () => Promise<void>;
+  imageUrl: string;
+  isLoading?: boolean; // Add this line
 }
 
 export function UserMenu({

@@ -1,15 +1,12 @@
-// app/settings/page.tsx
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import { signOut, useSession } from "next-auth/react";
-import { useToast } from "@/src/components/ui/use-toast"
+import toast from 'react-hot-toast';
 
 function SettingsContent() {
-  const { toast } = useToast();
-
   const { status } = useSession();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,17 +41,9 @@ function SettingsContent() {
       }
 
       await signOut({ callbackUrl: '/auth/login' });
-      toast({
-        title: "Account Deleted",
-        description: "Your account has been successfully deleted.",
-        variant: "default",
-      });
+      toast.success('Your account has been successfully deleted.');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to delete account',
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to delete account');
     } finally {
       setIsDeleting(false);
     }

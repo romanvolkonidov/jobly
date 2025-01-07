@@ -11,20 +11,31 @@ export async function POST(req: Request) {
     }
 
     const taskData = await req.json();
+    console.log('Received task data:', taskData);
 
+    // Map name to title
     const task = await prisma.task.create({
       data: {
-        title: taskData.title, // Changed from name to title for consistency
+        title: taskData.name, // Use name instead of title
         description: taskData.description,
         budget: taskData.budget,
-        status: taskData.status,
+        status: taskData.status || 'open',
+        subcategory: taskData.subcategory,
         userId: session.user.id,
+        needsBusinessDoc: taskData.needsBusinessDoc || false
       }
     });
 
     return NextResponse.json(task);
+    
   } catch (error) {
     console.error('Error creating task:', error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to create task' },
       { status: 500 }

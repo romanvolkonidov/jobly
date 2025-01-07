@@ -1,3 +1,4 @@
+// app/profile/hooks/useProfileActions.ts
 import { useState } from 'react';
 import { ProfileActionsProps } from './types';
 
@@ -23,6 +24,7 @@ export function useProfileActions({
       setEditingAbout(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
+      throw error;
     }
   };
 
@@ -41,6 +43,7 @@ export function useProfileActions({
       setPortfolioImages(prev => prev.filter(img => img !== imageUrl));
     } catch (error) {
       console.error('Failed to remove image:', error);
+      throw error;
     }
   };
 
@@ -48,15 +51,20 @@ export function useProfileActions({
     try {
       const response = await fetch('/api/profile/portfolio-video', {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
 
       if (response.status === 401) return;
-      if (!response.ok) throw new Error('Failed to remove video');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to remove video');
+      }
 
       setPortfolioVideo(null);
     } catch (error) {
       console.error('Failed to remove video:', error);
+      throw error;
     }
   };
 
