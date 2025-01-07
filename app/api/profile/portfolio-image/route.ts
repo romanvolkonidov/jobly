@@ -122,11 +122,11 @@ export async function GET() {
   }
 }
 
-export const config = {
+export const runtime = 'nodejs'
+export const bodyLimitConfig = {
   api: {
     bodyParser: {
       sizeLimit: '5mb'
     }
   }
-};
-
+}
