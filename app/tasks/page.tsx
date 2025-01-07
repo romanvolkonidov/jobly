@@ -8,10 +8,11 @@ import { TaskModal } from '@/src/components/tasks/TaskModal';
 import { useTasks } from '@/src/hooks/useTasks';
 import { Task } from '@/src/types/task';
 
+
 export default function ProjectsPage() {
   const [activeTab, setActiveTab] = useState<'client' | 'worker'>('client');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const {   error, refetch } = useTasks();
+  const { error, refetch } = useTasks(activeTab);
   const { data, isLoading } = useTasks(activeTab);
   const handleDelete = async (taskId: string) => {
     try {

@@ -1,3 +1,6 @@
+import { Dispatch, SetStateAction } from 'react';
+
+
 export interface Bid {
   id: string;
   amount: number;
@@ -18,4 +21,11 @@ export interface Task {
     firstName: string;
     lastName: string;
   };
+}
+
+interface TaskCardProps {
+  task: Task;
+  isClientView: boolean;
+  onDelete?: (taskId: string) => Promise<void>;  // Make onDelete optional
+  onClick: Dispatch<SetStateAction<Task | null>>;
 }

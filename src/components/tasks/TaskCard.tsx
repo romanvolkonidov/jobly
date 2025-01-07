@@ -1,6 +1,7 @@
 // components/tasks/TaskCard.tsx
 import { Archive } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Dispatch, SetStateAction } from 'react';
 
 interface Bid {
   id: string;
@@ -24,15 +25,19 @@ interface Task {
   };
 }
 
+// components/tasks/TaskCard.tsx
 interface TaskCardProps {
   task: Task;
   isClientView: boolean;
-  onClick: (task: Task) => void;
+  onClick: Dispatch<SetStateAction<Task | null>>;  // Updated
+  onDelete?: (taskId: string) => Promise<void>;    // Added
 }
+
 export const TaskCard = ({
   task,
   isClientView,
   onClick,
+  onDelete,
 }: TaskCardProps) => {
   const archiveTask = async () => {
     try {
