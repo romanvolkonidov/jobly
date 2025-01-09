@@ -54,9 +54,9 @@ function MobileMenu({ closeAction, imageUrl, isLoading = false }: MobileMenuProp
     path: string;
     requireAuth?: boolean;
   }> = [
+    { label: 'Create a task', path: '/categories', requireAuth: false },
     { label: 'Find Tasks', path: '/tasks', requireAuth: false },
     { label: 'My Projects', path: '/projects', requireAuth: true },
-    { label: 'Create a task', path: '/categories', requireAuth: false },
   ];
 
   return (

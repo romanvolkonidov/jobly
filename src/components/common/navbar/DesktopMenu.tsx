@@ -45,22 +45,6 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
 
   return (
     <div className="hidden md:flex space-x-6">
-      <Link 
-        href="/tasks" 
-        className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200"
-      >
-        Find Tasks
-      </Link>
-      
-      {isLoggedIn && (
-        <Link 
-          href="/projects" 
-          className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200"
-        >
-          My Projects
-        </Link>
-      )}
-
       <div
         className="relative"
         onMouseEnter={() => setIsMenuOpen(true)}
@@ -125,6 +109,23 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
           </div>
         )}
       </div>
+      <Link 
+        href="/tasks" 
+        className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200"
+      >
+        Find Tasks
+      </Link>
+      
+      {isLoggedIn && (
+        <Link 
+          href="/projects" 
+          className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200"
+        >
+          My Projects
+        </Link>
+      )}
+
+      
     </div>
   );
 }

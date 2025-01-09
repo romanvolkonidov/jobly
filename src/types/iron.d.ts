@@ -12,3 +12,9 @@ declare module 'next-auth' {
     }
   }
 }
+
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}

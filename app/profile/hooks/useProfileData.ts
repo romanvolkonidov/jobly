@@ -18,6 +18,7 @@ declare module "next-auth" {
 }
 
 export function useProfileData() {
+  const [skills, setSkills] = useState<string[]>([]);
   const { status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [aboutMe, setAboutMe] = useState('');
@@ -40,6 +41,7 @@ export function useProfileData() {
       setUser(data);
       setAboutMe(data.aboutMe || '');
       setImageUrl(data.imageUrl || '');
+      setSkills(data.skills || []);
       setPortfolioImages(data.portfolioImages || []);
       setPortfolioVideo(data.portfolioVideo || null);
     } catch (err) {
@@ -61,6 +63,8 @@ export function useProfileData() {
     aboutMe,
     setAboutMe,
     imageUrl,
+    skills,
+    setSkills,
     setImageUrl,
     portfolioImages,
     setPortfolioImages,

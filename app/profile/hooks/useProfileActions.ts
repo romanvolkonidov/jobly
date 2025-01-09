@@ -28,6 +28,27 @@ export function useProfileActions({
     }
   };
 
+  const handleSkillsSubmit = async (newSkills: string[]) => {
+    try {
+      const response = await fetch('/api/profile/skillsSave', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: newSkills }),
+        credentials: 'include',
+      });
+  
+      if (response.status === 401) return;
+      if (!response.ok) throw new Error('Failed to save skills');
+      
+      const data = await response.json();
+      setUser(data); // Add this line to update client state
+      
+    } catch (error) {
+      console.error('Failed to save skills:', error);
+      throw error;
+    }
+  };
+
   const handleRemovePortfolioImage = async (imageUrl: string) => {
     try {
       const response = await fetch('/api/profile/portfolio-image', {
@@ -72,6 +93,7 @@ export function useProfileActions({
     editingAbout,
     setEditingAbout,
     handleAboutMeSubmit,
+    handleSkillsSubmit,
     handleRemovePortfolioImage,
     handleRemoveVideo
   };

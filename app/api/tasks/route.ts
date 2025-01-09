@@ -8,6 +8,12 @@ interface WhereClause {
     gte?: number;
     lte?: number;
   };
+  category?: {
+    in: string[];
+  };
+  subcategory?: {
+    in: string[];
+  };
 }
 
 export async function GET(req: Request) {
@@ -20,9 +26,11 @@ export async function GET(req: Request) {
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const status = searchParams.get('status') || 'open';
+    const categories = searchParams.get('categories')?.split(',');
+    const subcategories = searchParams.get('subcategories')?.split(',');
 
-    // Build where clause based on filters
     const where: WhereClause = { status };
+
     if (minBudget || maxBudget) {
       where.budget = {
         ...(minBudget && { gte: parseFloat(minBudget) }),
@@ -30,10 +38,16 @@ export async function GET(req: Request) {
       };
     }
 
-    // Get total count for pagination
+    if (categories?.length) {
+      where.category = { in: categories };
+    }
+
+    if (subcategories?.length) {
+      where.subcategory = { in: subcategories };
+    }
+
     const total = await prisma.task.count({ where });
 
-    // Get tasks with pagination
     const tasks = await prisma.task.findMany({
       where,
       include: {
@@ -58,17 +72,8 @@ export async function GET(req: Request) {
       take: limit,
     });
 
-    // Transform the tasks to include fullName
-    const transformedTasks = tasks.map(task => ({
-      ...task,
-      createdBy: {
-        ...task.createdBy,
-        fullName: `${task.createdBy.firstName} ${task.createdBy.lastName}`
-      }
-    }));
-
     return NextResponse.json({
-      tasks: transformedTasks,
+      tasks,
       pagination: {
         total,
         pages: Math.ceil(total / limit),

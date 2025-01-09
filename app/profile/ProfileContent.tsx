@@ -1,4 +1,4 @@
-'use client';
+// ProfileContent.tsx
 import { useState } from 'react';
 import { useProfileData } from './hooks/useProfileData';
 import { useMediaUpload } from './hooks/useMediaUpload';
@@ -6,11 +6,13 @@ import { useProfileActions } from './hooks/useProfileActions';
 import { ProfileHeader } from '@/src/components/profile/ProfileHeader';
 import { AboutSection } from '@/src/components/profile/AboutSection';
 import { PortfolioSection } from '@/src/components/profile/PortfolioSection';
-
-
+import SkillsSection from '@/src/components/profile/SkillsSection';
+import LocationSection from '@/src/components/profile/LocationSection';
+import type { LocationData } from '@/src/types/location';
 
 export function ProfileContent() {
   const [editingAbout, setEditingAbout] = useState(false);
+  const [location, setLocation] = useState<LocationData | null>(null);
 
   const {
     user,
@@ -19,6 +21,8 @@ export function ProfileContent() {
     setAboutMe,
     imageUrl,
     setImageUrl,
+    skills,
+    setSkills,
     portfolioImages,
     setPortfolioImages,
     portfolioVideo,
@@ -37,13 +41,14 @@ export function ProfileContent() {
 
   const {
     handleAboutMeSubmit,
+    handleSkillsSubmit,
     handleRemovePortfolioImage,
     handleRemoveVideo,
   } = useProfileActions({
     setUser,
     aboutMe,
-    setPortfolioImages, // Add these missing props
-    setPortfolioVideo   // Add these missing props
+    setPortfolioImages,
+    setPortfolioVideo
   });
 
   if (isLoading) {
@@ -75,6 +80,37 @@ export function ProfileContent() {
         setEditingAbout={setEditingAbout}
         setAboutMe={setAboutMe}
         onSubmit={handleAboutMeSubmit}
+      />
+      <LocationSection
+        initialLocation={location}
+        onLocationSelect={async (locationData) => {
+          try {
+            const response = await fetch('/api/profile/location', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(locationData),
+            });
+            if (!response.ok) throw new Error('Failed to update location');
+            const updatedUser = await response.json();
+            setUser(updatedUser);
+            setLocation(locationData);
+          } catch (error) {
+            console.error('Failed to update location:', error);
+            throw error;
+          }
+        }}
+        allowedCountries={['US', 'CA']}
+      />
+      <SkillsSection 
+        selectedSkills={skills} 
+        onSkillsChange={async (newSkills) => {
+          try {
+            await handleSkillsSubmit(newSkills);
+            setSkills(newSkills);
+          } catch (error) {
+            throw error;
+          }
+        }} 
       />
       <PortfolioSection
         portfolioImages={portfolioImages}

@@ -1,4 +1,4 @@
-//app/api/profile/worker-status/route.ts
+//app/api/profile/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getServerSession } from "next-auth";
@@ -17,6 +17,7 @@ export async function GET() {
       id: true,
       firstName: true,
       lastName: true,
+      skills: true,
       email: true,
       imageUrl: true,
       aboutMe: true,
@@ -61,12 +62,13 @@ export async function PUT(req: Request) {
       email: true,
       imageUrl: true,
       aboutMe: true,
+      skills: true,
+      completedTasks: true,
       location: true,
       isWorker: true,
       rating: true,
       portfolioImages: true,
       portfolioVideo: true,
-      completedTasks: true,
       reviewCount: true,
       taskRating: true,
     }

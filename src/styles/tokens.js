@@ -4,7 +4,6 @@ export const tokens = {
     primary: {
       blue: '#2563EB',    // Main CTAs, buttons, links
       orange: '#EA580C' ,  // Secondary actions, highlights
-      red: '#EF4444',
     },
     status: {
       success: '#16A34A', 

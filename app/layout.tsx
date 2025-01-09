@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { headers } from 'next/headers';
 import { GeistSans, GeistMono } from 'geist/font';
 import { Toaster } from 'react-hot-toast'; // Add this import
+import Script from 'next/script'
+import GoogleMapsScript from '@/src/components/common/GoogleMapsScript';
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
@@ -20,10 +22,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
         <meta name="csrf-token" content={csrfToken} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
+        <GoogleMapsScript />
+
           <Toaster 
             position="top-center"
             toastOptions={{

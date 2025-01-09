@@ -3,7 +3,8 @@
     "types": [
       "react",
       "react-dom",
-      "node"
+      "node",
+      "google.maps"
     ],
     "typeRoots": [
       "./node_modules/@types",

@@ -34,7 +34,6 @@ model User {
   resetTokenExpiry  DateTime?
   imageUrl          String?
   aboutMe           String?
-  location          String?
   isWorker          Boolean   @default(false)
   rating            Float?    @default(0)
   createdAt         DateTime  @default(now())
@@ -44,10 +43,17 @@ model User {
   taskRating        Float     @default(0)
   portfolioImages   String[]  @default([])
   portfolioVideo    String?
+  skills            String[]  @default([])
+  languages         String[]  @default([])
+  yearsExperience   Int?
   bids              Bid[]     @relation("BidCreator")
   sentMessages      Message[] @relation("MessageSender")
   receivedMessages  Message[] @relation("MessageReceiver")
   tasks             Task[]    @relation("TaskCreator")
+  location          String?
+  placeId           String?
+  latitude          Float?
+  longitude         Float?
 
   @@index([email])
   @@index([verificationToken])
