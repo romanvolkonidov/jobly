@@ -1,3 +1,4 @@
+
 // ProfileContent.tsx
 import { useState } from 'react';
 import { useProfileData } from './hooks/useProfileData';
@@ -99,7 +100,6 @@ export function ProfileContent() {
             throw error;
           }
         }}
-        allowedCountries={['US', 'CA']}
       />
       <SkillsSection 
         selectedSkills={skills} 
