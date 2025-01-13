@@ -52,10 +52,9 @@ interface ResumeData {
 
 interface ViewResumeProps {
   onEdit: () => void;
-  initialData?: ResumeData | null;
 }
 
-const ViewResume: React.FC<ViewResumeProps> = ({ onEdit, initialData = null }) => {
+const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
   const [data, setData] = useState<ResumeData | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,12 +75,6 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit, initialData = null }) =
   }, []);
 
   useEffect(() => {
-    if (initialData) {
-      setData(initialData);
-      setIsLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       try {
         const response = await fetch('/api/resumes');
@@ -98,7 +91,7 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit, initialData = null }) =
     };
 
     fetchData();
-  }, [initialData]);
+  }, []);
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
   if (!data) return (
@@ -118,10 +111,12 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit, initialData = null }) =
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 -mx-8 p-8">
         <div className="flex items-center gap-8">
           {profile?.imageUrl && (
-            <img 
+            <Image 
               src={profile.imageUrl} 
               alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-white object-cover"
+              width={96}
+              height={96}
+              className="rounded-full border-4 border-white object-cover"
             />
           )}
           <div className="text-white">

@@ -25,9 +25,12 @@ interface BusinessForm {
   };
 }
 
-const BusinessForm = () => {
+interface BusinessFormProps {
+  onCancel: () => void;
+}
+
+const BusinessForm = ({ onCancel }: BusinessFormProps) => {
   const router = useRouter();
-  const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['basic'])
@@ -71,9 +74,6 @@ const BusinessForm = () => {
         setFormData(company);
         // Ensure logo is properly set from company data
         setLogo(company.logo || null);
-        setIsEditMode(false);
-      } else {
-        setIsEditMode(true);
       }
     } catch (error) {
       console.error('Error fetching company data:', error);
@@ -212,7 +212,7 @@ const BusinessForm = () => {
       setFormData(updatedCompany);
       setLogo(updatedCompany.logo);
       toast.success('Company profile saved successfully!');
-      setIsEditMode(false);
+      onCancel(); // Call onCancel to return to ViewCompany
     } catch (error) {
       console.error('Failed to save company profile:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save company profile');
@@ -281,16 +281,7 @@ const BusinessForm = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Company Profile</h2>
-        {!isEditMode && (
-          <button
-            onClick={() => setIsEditMode(true)}
-            className="flex items-center gap-2 px-4 py-2 text-purple-600 border border-purple-600 rounded-md hover:bg-purple-50"
-          >
-            <Edit className="w-4 h-4" />
-            Edit Profile
-          </button>
-        )}
+        <h2 className="text-2xl font-bold">Edit Company Profile</h2>
       </div>
 
       <Section title="Basic Information" section="basic">
@@ -308,99 +299,80 @@ const BusinessForm = () => {
                       className="object-cover rounded-lg border border-gray-200"
                       unoptimized={logo?.startsWith('http') || logo?.startsWith('/')}
                     />
-                    {isEditMode && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLogo(null);
-                          setFormData(prev => ({ ...prev, logo: null }));
-                        }}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLogo(null);
+                        setFormData(prev => ({ ...prev, logo: null }));
+                      }}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                ) : isEditMode ? (
+                ) : (
                   <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="file"
                       className="hidden"
                       accept="image/*"
                       onChange={handleLogoUpload}
-                      disabled={isUploading || !isEditMode}
+                      disabled={isUploading}
                     />
                     <Upload className="w-8 h-8 text-gray-400 mb-2" />
                     <span className="text-sm text-gray-500">Upload Logo</span>
                   </label>
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full border-2 rounded-lg bg-gray-50">
-                    <span className="text-sm text-gray-500">No logo</span>
-                  </div>
                 )}
               </div>
             </div>
 
             <div className="grid gap-4">
-              {isEditMode ? (
-                <>
-                  <FormField label="Company Name" required>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Acme Corporation"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Company Name" required>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Acme Corporation"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Company Description" required>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleTextAreaChange}
-                      placeholder="Describe your company's mission, values, and what makes it unique..."
-                      className="w-full p-2 border rounded-md h-32 focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Company Description" required>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleTextAreaChange}
+                  placeholder="Describe your company's mission, values, and what makes it unique..."
+                  className="w-full p-2 border rounded-md h-32 focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Industry" required>
-                      <input
-                        type="text"
-                        name="industry"
-                        value={formData.industry}
-                        onChange={handleInputChange}
-                        placeholder="e.g., Technology"
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                      />
-                    </FormField>
-                    
-                    <FormField label="Year Established">
-                      <input
-                        type="number"
-                        name="yearEstablished"
-                        value={formData.yearEstablished}
-                        onChange={handleInputChange}
-                        placeholder="e.g., 2020"
-                        min="1800"
-                        max={new Date().getFullYear()}
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                      />
-                    </FormField>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <DisplayField label="Company Name" value={formData.name} />
-                  <DisplayField label="Company Description" value={formData.description} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <DisplayField label="Industry" value={formData.industry} />
-                    <DisplayField label="Year Established" value={formData.yearEstablished} />
-                  </div>
-                </>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Industry" required>
+                  <input
+                    type="text"
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Technology"
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                  />
+                </FormField>
+                
+                <FormField label="Year Established">
+                  <input
+                    type="number"
+                    name="yearEstablished"
+                    value={formData.yearEstablished}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 2020"
+                    min="1800"
+                    max={new Date().getFullYear()}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                  />
+                </FormField>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -410,48 +382,38 @@ const BusinessForm = () => {
         <CardContent className={expandedSections.has('contact') ? 'block' : 'hidden'}>
           <div className="space-y-4 p-4">
             <div className="grid gap-4">
-              {isEditMode ? (
-                <>
-                  <FormField label="Business Email" required>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="e.g., contact@company.com"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Business Email" required>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="e.g., contact@company.com"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Business Phone" required>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="e.g., +1 (555) 123-4567"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Business Phone" required>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="e.g., +1 (555) 123-4567"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Website URL">
-                    <input
-                      type="url"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      placeholder="e.g., https://www.company.com"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
-                </>
-              ) : (
-                <>
-                  <DisplayField label="Business Email" value={formData.email} />
-                  <DisplayField label="Business Phone" value={formData.phone} />
-                  <DisplayField label="Website URL" value={formData.website} />
-                </>
-              )}
+              <FormField label="Website URL">
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleInputChange}
+                  placeholder="e.g., https://www.company.com"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
             </div>
           </div>
         </CardContent>
@@ -461,53 +423,43 @@ const BusinessForm = () => {
         <CardContent className={expandedSections.has('legal') ? 'block' : 'hidden'}>
           <div className="space-y-4 p-4">
             <div className="grid gap-4">
-              {isEditMode ? (
-                <>
-                  <FormField label="Business Registration Number" required>
-                    <input
-                      type="text"
-                      name="registrationNumber"
-                      value={formData.registrationNumber}
-                      onChange={handleInputChange}
-                      placeholder="e.g., LLC-123456"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Business Registration Number" required>
+                <input
+                  type="text"
+                  name="registrationNumber"
+                  value={formData.registrationNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g., LLC-123456"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Company Size" required>
-                    <select
-                      name="size"
-                      value={formData.size}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    >
-                      <option value="">Select Company Size</option>
-                      <option value="1-10">1-10 employees</option>
-                      <option value="11-50">11-50 employees</option>
-                      <option value="51-200">51-200 employees</option>
-                      <option value="201-500">201-500 employees</option>
-                      <option value="501+">501+ employees</option>
-                    </select>
-                  </FormField>
+              <FormField label="Company Size" required>
+                <select
+                  name="size"
+                  value={formData.size}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                >
+                  <option value="">Select Company Size</option>
+                  <option value="1-10">1-10 employees</option>
+                  <option value="11-50">11-50 employees</option>
+                  <option value="51-200">51-200 employees</option>
+                  <option value="201-500">201-500 employees</option>
+                  <option value="501+">501+ employees</option>
+                </select>
+              </FormField>
 
-                  <FormField label="Tax ID">
-                    <input
-                      type="text"
-                      name="taxId"
-                      value={formData.taxId}
-                      onChange={handleInputChange}
-                      placeholder="Tax ID (Optional)"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
-                </>
-              ) : (
-                <>
-                  <DisplayField label="Business Registration Number" value={formData.registrationNumber} />
-                  <DisplayField label="Company Size" value={formData.size} />
-                  <DisplayField label="Tax ID" value={formData.taxId ?? null} />
-                </>
-              )}
+              <FormField label="Tax ID">
+                <input
+                  type="text"
+                  name="taxId"
+                  value={formData.taxId}
+                  onChange={handleInputChange}
+                  placeholder="Tax ID (Optional)"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
             </div>
           </div>
         </CardContent>
@@ -517,73 +469,61 @@ const BusinessForm = () => {
         <CardContent className={expandedSections.has('social') ? 'block' : 'hidden'}>
           <div className="space-y-4 p-4">
             <div className="grid gap-4">
-              {isEditMode ? (
-                <>
-                  <FormField label="LinkedIn Company Page">
-                    <input
-                      type="url"
-                      value={formData.socialMedia?.linkedin || ''}
-                      onChange={(e) => handleSocialMediaChange(e, 'linkedin')}
-                      placeholder="e.g., https://linkedin.com/company/acme"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="LinkedIn Company Page">
+                <input
+                  type="url"
+                  value={formData.socialMedia?.linkedin || ''}
+                  onChange={(e) => handleSocialMediaChange(e, 'linkedin')}
+                  placeholder="e.g., https://linkedin.com/company/acme"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Twitter Profile">
-                    <input
-                      type="url"
-                      value={formData.socialMedia?.twitter || ''}
-                      onChange={(e) => handleSocialMediaChange(e, 'twitter')}
-                      placeholder="e.g., https://twitter.com/acme"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
+              <FormField label="Twitter Profile">
+                <input
+                  type="url"
+                  value={formData.socialMedia?.twitter || ''}
+                  onChange={(e) => handleSocialMediaChange(e, 'twitter')}
+                  placeholder="e.g., https://twitter.com/acme"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
 
-                  <FormField label="Facebook Page">
-                    <input
-                      type="url"
-                      value={formData.socialMedia?.facebook || ''}
-                      onChange={(e) => handleSocialMediaChange(e, 'facebook')}
-                      placeholder="e.g., https://facebook.com/acme"
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
-                    />
-                  </FormField>
-                </>
-              ) : (
-                <>
-                  <DisplayField label="LinkedIn Company Page" value={formData.socialMedia?.linkedin ?? null} />
-                  <DisplayField label="Twitter Profile" value={formData.socialMedia?.twitter ?? null} />
-                  <DisplayField label="Facebook Page" value={formData.socialMedia?.facebook ?? null} />
-                </>
-              )}
+              <FormField label="Facebook Page">
+                <input
+                  type="url"
+                  value={formData.socialMedia?.facebook || ''}
+                  onChange={(e) => handleSocialMediaChange(e, 'facebook')}
+                  placeholder="e.g., https://facebook.com/acme"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
+                />
+              </FormField>
             </div>
           </div>
         </CardContent>
       </Section>
 
-      {isEditMode && (
-        <div className="flex justify-end gap-4 pt-6">
-          <button
-            type="button"
-            className="px-6 py-2 text-gray-600 border rounded-md hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200"
-            onClick={() => {
-              fetchCompanyData();
-              setIsEditMode(false);
-            }}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button 
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors focus:ring-2 focus:ring-purple-200 focus:ring-offset-2 disabled:bg-purple-300 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      )}
+      <div className="flex justify-end gap-4 pt-6">
+        <button
+          type="button"
+          onClick={() => {
+            fetchCompanyData();
+            onCancel();
+          }}
+          disabled={isSubmitting}
+          className="px-6 py-2 text-gray-600 border rounded-md hover:bg-gray-50 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button 
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 disabled:opacity-50"
+        >
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
     </div>
   );
 };

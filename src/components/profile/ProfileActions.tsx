@@ -2,13 +2,25 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/src/components/ui/Card';
 import { FileText, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import ResumeForm from './ResumeForm';
+import ViewResume from './ViewResume';
 import BusinessForm from './BusinessForm';
+import ViewCompany from './ViewCompany';
 
 const ProfileActions = () => {
   const [expandedSection, setExpandedSection] = useState<'resume' | 'business' | null>(null);
+  const [isEditingResume, setIsEditingResume] = useState(false);
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
 
   const toggleSection = (section: 'resume' | 'business') => {
-    setExpandedSection(expandedSection === section ? null : section);
+    if (section !== expandedSection) {
+      setExpandedSection(section);
+      setIsEditingResume(false);
+      setIsEditingCompany(false);
+    } else {
+      setExpandedSection(null);
+      setIsEditingResume(false);
+      setIsEditingCompany(false);
+    }
   };
 
   return (
@@ -82,7 +94,19 @@ const ProfileActions = () => {
       {expandedSection && (
         <div className="border rounded-lg mt-4">
           <CardContent className="p-6">
-            {expandedSection === 'resume' ? <ResumeForm /> : <BusinessForm />}
+            {expandedSection === 'resume' ? (
+              isEditingResume ? (
+                <ResumeForm onCancel={() => setIsEditingResume(false)} />
+              ) : (
+                <ViewResume onEdit={() => setIsEditingResume(true)} />
+              )
+            ) : (
+              isEditingCompany ? (
+                <BusinessForm onCancel={() => setIsEditingCompany(false)} />
+              ) : (
+                <ViewCompany onEdit={() => setIsEditingCompany(true)} />
+              )
+            )}
           </CardContent>
         </div>
       )}
@@ -90,4 +114,4 @@ const ProfileActions = () => {
   );
 };
 
-export default ProfileActions;  
+export default ProfileActions;
