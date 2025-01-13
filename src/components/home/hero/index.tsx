@@ -15,6 +15,11 @@ const Hero = () => {
     }
   };
 
+  const handlePostTask = () => {
+    // Initialize with a default subcategory - you can adjust this as needed
+    router.push('/create-task/general-task');
+  };
+
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 text-center">
@@ -39,10 +44,13 @@ const Hero = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-2">Need something done?</h2>
             <p className="text-gray-600 mb-4">Post a one-time task</p>
-            <a href="/post-task" className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors w-full">
+            <button
+              onClick={handlePostTask}
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors w-full"
+            >
               Post Task
               <ArrowRight size={20} />
-            </a>
+            </button>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-sm">
