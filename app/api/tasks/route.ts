@@ -14,6 +14,16 @@ interface WhereClause {
   subcategory?: {
     in: string[];
   };
+  OR?: {
+    title?: {
+      contains: string;
+      mode: 'insensitive';
+    };
+    description?: {
+      contains: string;
+      mode: 'insensitive';
+    };
+  }[];
 }
 
 export async function GET(req: Request) {
@@ -28,8 +38,16 @@ export async function GET(req: Request) {
     const status = searchParams.get('status') || 'open';
     const categories = searchParams.get('categories')?.split(',');
     const subcategories = searchParams.get('subcategories')?.split(',');
+    const searchQuery = searchParams.get('search')?.trim();
 
     const where: WhereClause = { status };
+
+    if (searchQuery) {
+      where.OR = [
+        { title: { contains: searchQuery, mode: 'insensitive' } },
+        { description: { contains: searchQuery, mode: 'insensitive' } }
+      ];
+    }
 
     if (minBudget || maxBudget) {
       where.budget = {
@@ -65,9 +83,9 @@ export async function GET(req: Request) {
           },
         },
       },
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      orderBy: [
+        { [sortBy]: sortOrder },
+      ],
       skip: (page - 1) * limit,
       take: limit,
     });

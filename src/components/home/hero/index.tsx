@@ -1,104 +1,91 @@
-//src/components/home/hero/index.tsx
-//this file works in the following way: it contains the hero section of the home page
 'use client';
 
-import { useRouter } from 'next/navigation'; // Add this import
-import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
-import {  withLazyLoading } from '@/src/components/common/Performance';
+import React, { useState } from 'react';
+import { ArrowRight, Search, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-const searchPlaceholders = [
-  "Find a plumber nearby...",
-  "Looking for a web developer...",
-  "Need help moving...",
-  "Search for a graphic designer..."
-];
-
-function HeroSection() {
-  const router = useRouter(); // Add this line
-
+const Hero = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-    const interval = setInterval(() => {
-      setPlaceholderIndex(i => (i + 1) % searchPlaceholders.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-// src/components/home/hero/index.tsx
-
-const handleSearch = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (searchQuery.trim()) {
-    // Store the search query in localStorage first
-    localStorage.setItem('taskData', JSON.stringify({
-      name: searchQuery
-    }));
-    
-    // Use the default or most general subcategory
-    router.push('/create-task/other-services');
-  }
-};
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/tasks?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
-    <div className="relative min-h-[80vh] bg-gradient-to-b from-gray-50 to-white">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Find Skills to Seal Your Deals<br />Use Your Skills to Pay the Bills
+        </h1>
+        
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mb-12">
+          <div className="relative">
+            <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks or vacancies..."
+              className="w-full pl-12 pr-4 py-3 text-lg border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </form>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold mb-2">Need something done?</h2>
+            <p className="text-gray-600 mb-4">Post a one-time task</p>
+            <a href="/post-task" className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors w-full">
+              Post Task
+              <ArrowRight size={20} />
+            </a>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold mb-2">Hiring?</h2>
+            <p className="text-gray-600 mb-4">Post a job vacancy</p>
+            <a href="/post-vacancy" className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors w-full">
+              Post Vacancy
+              <ArrowRight size={20} />
+            </a>
+          </div>
+        </div>
       </div>
 
-      <div className="relative mx-auto max-w-5xl px-6 py-32">
-        <div className="text-center">
-          <h1 className="text-[36px] font-bold text-gray-900 tracking-tight leading-tight">
-            Get It Done
-          </h1>
-          
-          <p className="mt-6 text-gray-600 text-[16px] leading-relaxed">
-            Connect with skilled professionals in your area
-          </p>
-
-          <div className="mt-12 mx-auto max-w-2xl">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isClient ? searchPlaceholders[placeholderIndex] : searchPlaceholders[0]}
-                className="w-full px-8 py-6 text-lg border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-blue shadow-xl bg-white/90 backdrop-blur-sm"
-              />
-              <button 
-                type="submit"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 text-white p-4 rounded-xl transition-colors 
-                  ${isHovered ? 'bg-primary-blue/80' : 'bg-primary-blue'}`}
-              >
-                <Search className="h-6 w-6" />
-              </button>
-            </form>
-          </div>
-
-          <div className="mt-10 flex justify-center items-center space-x-6">
-            <div className="flex -space-x-4">
-              {[1,2,3,4].map((i) => (
-                <div 
-                  key={i}
-                  className="w-12 h-12 rounded-full border-2 border-white bg-gray-100 shadow-md"
-                />
-              ))}
+      <div className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-semibold text-center mb-8">How it Works</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-blue-100 p-3 rounded-full mb-4">
+                <CheckCircle className="text-blue-600" size={24} />
+              </div>
+              <h3 className="font-medium mb-2">Post</h3>
+              <p className="text-gray-600">Create your listing for free</p>
             </div>
-            <p className="text-gray-600 text-sm">
-              Join <span className="font-semibold text-primary-blue">2,000+</span> people getting things done
-            </p>
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-blue-100 p-3 rounded-full mb-4">
+                <CheckCircle className="text-blue-600" size={24} />
+              </div>
+              <h3 className="font-medium mb-2">Connect</h3>
+              <p className="text-gray-600">Message and negotiate directly</p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-blue-100 p-3 rounded-full mb-4">
+                <CheckCircle className="text-blue-600" size={24} />
+              </div>
+              <h3 className="font-medium mb-2">Complete</h3>
+              <p className="text-gray-600">Handle payment privately</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
-export default withLazyLoading(HeroSection);
+export default Hero;

@@ -6,7 +6,8 @@ import { TaskCard } from '@/src/components/tasks/TaskCard';
 import { TaskModal } from '@/src/components/tasks/TaskModal';
 import { Task } from '@/src/types/task';
 import { categories } from '@/src/data/categories';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search } from 'lucide-react';
+import debounce from 'lodash/debounce';
 
 interface PaginatedResponse {
   tasks: Task[];
@@ -35,8 +36,14 @@ export default function TaskListingPage() {
     maxBudget: '',
     sortBy: 'createdAt',
     sortOrder: 'desc' as 'asc' | 'desc',
-    status: 'open'
+    status: 'open',
+    searchQuery: ''
   });
+
+  const debouncedSearch = debounce((value: string) => {
+    setFilters(prev => ({ ...prev, searchQuery: value }));
+    setPage(1);
+  }, 300);
 
   const toggleCategory = (categoryName: string) => {
     setSelectedFilters(prev => {
@@ -107,6 +114,7 @@ export default function TaskListingPage() {
         limit: '10',
         ...(filters.minBudget && { minBudget: filters.minBudget }),
         ...(filters.maxBudget && { maxBudget: filters.maxBudget }),
+        ...(filters.searchQuery && { search: filters.searchQuery }),
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
         status: filters.status,
@@ -127,6 +135,17 @@ export default function TaskListingPage() {
         <div className="flex-1">
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    onChange={(e) => debouncedSearch(e.target.value)}
+                    className="w-full pl-10 p-2 border rounded"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Budget Range
@@ -292,20 +311,18 @@ export default function TaskListingPage() {
                   )}
                 </div>
               ))}
-                       </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                     </div>
-
-       </div>
-     </div>
-
-     {selectedTask && (
-       <TaskModal
-         task={selectedTask}
-         isWorkerView={false}
-         onClose={() => setSelectedTask(null)}
-       />
-     )}
-   </div>
- );
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          isWorkerView={false}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
+    </div>
+  );
 }

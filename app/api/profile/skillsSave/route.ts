@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
         email: true,
         imageUrl: true,
         aboutMe: true,
-        location: true,
+        locations: true,
         isWorker: true,
         rating: true,
         skills: true,

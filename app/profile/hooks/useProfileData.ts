@@ -1,10 +1,8 @@
-// useProfileData.ts
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@prisma/client';
 import { useSession } from 'next-auth/react';
+import type { LocationData } from '@/src/types/location';
 
-// Add this at the top of the file
-// useProfileData.ts
 declare module "next-auth" {
   interface Session {
     user: {
@@ -19,6 +17,8 @@ declare module "next-auth" {
 
 export function useProfileData() {
   const [skills, setSkills] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [locations, setLocations] = useState<LocationData[]>([]);
   const { status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [aboutMe, setAboutMe] = useState('');
@@ -42,6 +42,8 @@ export function useProfileData() {
       setAboutMe(data.aboutMe || '');
       setImageUrl(data.imageUrl || '');
       setSkills(data.skills || []);
+      setLanguages(data.languages || []);
+      setLocations(data.locations || []);
       setPortfolioImages(data.portfolioImages || []);
       setPortfolioVideo(data.portfolioVideo || null);
     } catch (err) {
@@ -65,6 +67,10 @@ export function useProfileData() {
     imageUrl,
     skills,
     setSkills,
+    languages,
+    setLanguages,
+    locations,
+    setLocations,
     setImageUrl,
     portfolioImages,
     setPortfolioImages,

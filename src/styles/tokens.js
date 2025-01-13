@@ -1,22 +1,19 @@
-//src/styles/tokens.js
 export const tokens = {
   colors: {
     primary: {
-      blue: '#2563EB',    // Main CTAs, buttons, links
-      orange: '#EA580C' ,  // Secondary actions, highlights
-    },
-    status: {
-      success: '#16A34A', 
-      error: '#DC2626',   
-      warning: '#D97706'  
+      light: '#EEF2FF',   // indigo-50
+      main: '#2563EB',    // blue-600
+      dark: '#1D4ED8',    // blue-700
+      accent: '#4F46E5'   // indigo-600
     },
     gray: {
-      50: '#F9FAFB',     // Background
-      100: '#F3F4F6',    // Light background, hover
-      300: '#D1D5DB',    // Borders
-      600: '#4B5563',    // Secondary text
-      900: '#111827'     // Primary text
+      50: '#F9FAFB',
+      100: '#F3F4F6',
+      300: '#D1D5DB',
+      600: '#4B5563',
+      900: '#111827'
     },
+    success: '#16A34A',
     white: '#FFFFFF'
   },
   typography: {
@@ -25,7 +22,7 @@ export const tokens = {
     },
     fontSize: {
       display: '36px',
-      h1: '30px', 
+      h1: '30px',
       h2: '24px',
       h3: '20px',
       body: '16px',
@@ -45,7 +42,7 @@ export const tokens = {
   },
   spacing: {
     xs: '4px',
-    sm: '8px', 
+    sm: '8px',
     md: '16px',
     lg: '24px',
     xl: '32px',
@@ -62,17 +59,9 @@ export const tokens = {
     md: '0 4px 6px rgba(0, 0, 0, 0.1)',
     lg: '0 10px 15px rgba(0, 0, 0, 0.1)'
   },
-  breakpoints: {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px'
-  },
   transitions: {
-    default: '200ms ease-in-out',
-    slow: '300ms ease-in-out',
-    fast: '100ms ease-in-out'
+    default: '200ms ease-in-out'
   }
- }
- 
- export default tokens;
+}
+
+export default tokens;

@@ -1,171 +1,264 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
+  }
+
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+
+  model PendingUser {
+    id                      String    @id @default(cuid())
+    email                   String    @unique
+    password                String
+    firstName               String
+    lastName                String
+    verificationCode        String
+    verificationCodeExpires DateTime
+    createdAt              DateTime  @default(now())
+  }
+
+  model User {
+    id                String    @id @default(cuid())
+    email             String    @unique
+    password          String
+    firstName         String
+    lastName          String
+    resetPasswordToken     String?
+    resetPasswordExpires   DateTime?
+    verificationCode       String?
+    verificationCodeExpires DateTime?
+    emailVerified         Boolean   @default(false)
+    verificationToken String?   @unique
+    resetToken        String?   @unique
+    resetTokenExpiry  DateTime?
+    imageUrl          String?
+    aboutMe           String?
+    resumes           Resume[]   @relation("UserResumes")
+    companies         Company[]  @relation("UserCompanies")
+    isWorker          Boolean   @default(false)
+    rating            Float?    @default(0)
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    completedTasks    Int       @default(0)
+    reviewCount       Int       @default(0)
+    taskRating        Float     @default(0)
+    portfolioImages   String[]  @default([])
+    portfolioVideo    String?
+    skills            String[]  @default([])
+    languages         String[]  @default([])
+    yearsExperience   Int?
+    bids              Bid[]     @relation("BidCreator")
+    sentMessages      Message[] @relation("MessageSender")
+    receivedMessages  Message[] @relation("MessageReceiver")
+    tasks             Task[]    @relation("TaskCreator")
+    locations         Json[]  // Store array of LocationData objects
+    placeId           String?
+    latitude          Float?
+    longitude         Float?
+
+    @@index([email])
+    @@index([verificationToken])
+    @@index([resetToken])
+  }
+
+  model Task {
+    id          String    @id @default(cuid())
+    title       String
+    description String
+    budget      Float?
+    status      String    @default("open")
+    location    String?
+    userId      String
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    category    String?
+    subcategory String?
+    bids        Bid[]     @relation("TaskBids")
+    messages    Message[] @relation("TaskMessages")
+    needsBusinessDoc Boolean @default(false)
+
+    createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
+
+    @@index([userId])
+    @@index([category])
+    @@index([status])
+  }
+
+  model Bid {
+    id        String    @id @default(cuid())
+    amount    Float
+    proposal  String
+    status    String    @default("pending")
+    taskId    String
+    userId    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    task      Task      @relation("TaskBids", fields: [taskId], references: [id])
+    createdBy User      @relation("BidCreator", fields: [userId], references: [id])
+    messages  Message[]
+
+    @@index([taskId])
+    @@index([userId])
+  }
+
+  model Message {
+    id         String   @id @default(cuid())
+    content    String
+    fromUserId String
+    toUserId   String
+    taskId     String
+    bidId      String?
+    isRead     Boolean  @default(false)
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    bid        Bid?     @relation(fields: [bidId], references: [id])
+    from       User     @relation("MessageSender", fields: [fromUserId], references: [id])
+    task       Task     @relation("TaskMessages", fields: [taskId], references: [id])
+    to         User     @relation("MessageReceiver", fields: [toUserId], references: [id])
+
+    @@index([fromUserId])
+    @@index([toUserId])
+    @@index([taskId])
+    @@index([bidId])
+  }
+
+  model Review {
+    id         String   @id @default(cuid())
+    rating     Float
+    comment    String?
+    fromUserId String
+    toUserId   String
+    taskId     String
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    @@index([fromUserId])
+    @@index([toUserId])
+    @@index([taskId])
+  }
+
+  // Bot-related models
+  model BotProject {
+    id        String    @id @default(cuid())
+    name      String    @unique
+    context   String
+    userId    String
+    files     BotFile[]
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([userId])
+  }
+
+  model BotFile {
+    id        String     @id @default(cuid())
+    name      String
+    path      String
+    projectId String
+    project   BotProject @relation(fields: [projectId], references: [id])
+    createdAt DateTime   @default(now())
+
+    @@index([projectId])
+  }
+
+  model BotConversation {
+    id        String   @id @default(cuid())
+    userId    String
+    messages  Json[]   // Stores conversation history
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([userId])
+  }
+
+  // New Resume-related models
+model Resume {
+    id             String           @id @default(cuid())
+    userId         String
+    title          String?
+    summary        String?
+    education      Education[]
+    experience     Experience[]
+    certifications Certification[]
+    skills         String[]         @default([])
+    languages      String[]         @default([])
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    user           User             @relation("UserResumes", fields: [userId], references: [id])
+
+    @@index([userId])
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model Education {
+    id           String   @id @default(cuid())
+    institution  String
+    degree       String
+    field        String
+    startDate    DateTime
+    endDate      DateTime?
+    description  String?
+    resumeId     String
+    resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    @@index([resumeId])
 }
 
-model PendingUser {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  password                String
-  firstName               String
-  lastName                String
-  verificationCode        String
-  verificationCodeExpires DateTime
-  createdAt              DateTime  @default(now())
+model Experience {
+    id          String    @id @default(cuid())
+    title       String
+    company     String
+    location    String?
+    startDate   DateTime
+    endDate     DateTime?
+    current     Boolean   @default(false)
+    description String?
+    resumeId    String
+    resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([resumeId])
 }
 
-model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  password          String
-  firstName         String
-  lastName          String
-  resetPasswordToken     String?
-  resetPasswordExpires   DateTime?
-  verificationCode       String?
-  verificationCodeExpires DateTime?
-  emailVerified         Boolean   @default(false)
-  verificationToken String?   @unique
-  resetToken        String?   @unique
-  resetTokenExpiry  DateTime?
-  imageUrl          String?
-  aboutMe           String?
-  isWorker          Boolean   @default(false)
-  rating            Float?    @default(0)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  completedTasks    Int       @default(0)
-  reviewCount       Int       @default(0)
-  taskRating        Float     @default(0)
-  portfolioImages   String[]  @default([])
-  portfolioVideo    String?
-  skills            String[]  @default([])
-  languages         String[]  @default([])
-  yearsExperience   Int?
-  bids              Bid[]     @relation("BidCreator")
-  sentMessages      Message[] @relation("MessageSender")
-  receivedMessages  Message[] @relation("MessageReceiver")
-  tasks             Task[]    @relation("TaskCreator")
-  location          String?
-  placeId           String?
-  latitude          Float?
-  longitude         Float?
+model Certification {
+    id           String    @id @default(cuid())
+    name         String
+    issuer       String
+    issueDate    DateTime
+    expiryDate   DateTime?
+    credentialId String?
+    resumeId     String
+    resume       Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
 
-  @@index([email])
-  @@index([verificationToken])
-  @@index([resetToken])
+    @@index([resumeId])
 }
 
-model Task {
-  id          String    @id @default(cuid())
-  title       String
-  description String
-  budget      Float?
-  status      String    @default("open")
-  location    String?
-  userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  category    String?
-  subcategory String?
-  bids        Bid[]     @relation("TaskBids")
-  messages    Message[] @relation("TaskMessages")
-  needsBusinessDoc Boolean @default(false)
+// New Company-related models
+model Company {
+    id                 String    @id @default(cuid())
+    userId             String
+    logo               String?   // This is fine, will store the URL
+    name               String
+    description        String
+    registrationNumber String?
+    website            String?
+    industry          String
+    email             String
+    phone             String
+    yearEstablished   Int?
+    size              String?
+    taxId             String?
+    socialMedia       Json?      // Store social media links
+    locations         Json[]     // Store multiple locations
+    createdAt         DateTime   @default(now())
+    updatedAt         DateTime   @updatedAt
+    user              User       @relation("UserCompanies", fields: [userId], references: [id])
 
-  createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([category])
-  @@index([status])
-}
-
-model Bid {
-  id        String    @id @default(cuid())
-  amount    Float
-  proposal  String
-  status    String    @default("pending")
-  taskId    String
-  userId    String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  task      Task      @relation("TaskBids", fields: [taskId], references: [id])
-  createdBy User      @relation("BidCreator", fields: [userId], references: [id])
-  messages  Message[]
-
-  @@index([taskId])
-  @@index([userId])
-}
-
-model Message {
-  id         String   @id @default(cuid())
-  content    String
-  fromUserId String
-  toUserId   String
-  taskId     String
-  bidId      String?
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  bid        Bid?     @relation(fields: [bidId], references: [id])
-  from       User     @relation("MessageSender", fields: [fromUserId], references: [id])
-  task       Task     @relation("TaskMessages", fields: [taskId], references: [id])
-  to         User     @relation("MessageReceiver", fields: [toUserId], references: [id])
-
-  @@index([fromUserId])
-  @@index([toUserId])
-  @@index([taskId])
-  @@index([bidId])
-}
-
-model Review {
-  id         String   @id @default(cuid())
-  rating     Float
-  comment    String?
-  fromUserId String
-  toUserId   String
-  taskId     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([fromUserId])
-  @@index([toUserId])
-  @@index([taskId])
-}
-
-// Bot-related models
-model BotProject {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  context   String
-  userId    String
-  files     BotFile[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([userId])
-}
-
-model BotFile {
-  id        String     @id @default(cuid())
-  name      String
-  path      String
-  projectId String
-  project   BotProject @relation(fields: [projectId], references: [id])
-  createdAt DateTime   @default(now())
-
-  @@index([projectId])
-}
-
-model BotConversation {
-  id        String   @id @default(cuid())
-  userId    String
-  messages  Json[]   // Stores conversation history
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
+    @@index([userId])
+    @@index([industry])
 }

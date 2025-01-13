@@ -9,3 +9,5 @@ build
 node_modules/
 .env
 .vercel
+/public/uploads/companies/*
+!/public/uploads/companies/.gitkeep

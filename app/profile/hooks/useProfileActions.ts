@@ -1,9 +1,13 @@
-// app/profile/hooks/useProfileActions.ts
 import { useState } from 'react';
+import { User } from '@prisma/client';
 import { ProfileActionsProps } from './types';
 
 export function useProfileActions({ 
-  setUser, aboutMe, setPortfolioImages, setPortfolioVideo 
+  setUser, 
+  aboutMe, 
+  setPortfolioImages, 
+  setPortfolioVideo,
+  skills 
 }: ProfileActionsProps) {
   const [editingAbout, setEditingAbout] = useState(false);
 
@@ -41,10 +45,31 @@ export function useProfileActions({
       if (!response.ok) throw new Error('Failed to save skills');
       
       const data = await response.json();
-      setUser(data); // Add this line to update client state
+      setUser(data);
       
     } catch (error) {
       console.error('Failed to save skills:', error);
+      throw error;
+    }
+  };
+
+  const handleLanguagesSubmit = async (newLanguages: string[]) => {
+    try {
+      const response = await fetch('/api/profile/languages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ languages: newLanguages }),
+        credentials: 'include',
+      });
+  
+      if (response.status === 401) return;
+      if (!response.ok) throw new Error('Failed to save languages');
+      
+      const data = await response.json();
+      setUser(data);
+      
+    } catch (error) {
+      console.error('Failed to save languages:', error);
       throw error;
     }
   };
@@ -94,6 +119,7 @@ export function useProfileActions({
     setEditingAbout,
     handleAboutMeSubmit,
     handleSkillsSubmit,
+    handleLanguagesSubmit,
     handleRemovePortfolioImage,
     handleRemoveVideo
   };

@@ -1,4 +1,6 @@
 // types/location.ts
+
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -7,9 +9,13 @@ export interface Coordinates {
 export interface LocationData {
   address: string;
   placeId: string;
-  coordinates: Coordinates;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
   countryCode: string;
 }
+
 
 export interface LocationValidation {
   allowedCountries?: string[];

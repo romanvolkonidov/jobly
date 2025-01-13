@@ -20,6 +20,9 @@ export interface ProfileActionsProps {
 export interface LocationData {
   address: string;
   placeId: string;
-  coordinates: { lat: number; lng: number };
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
   countryCode: string;
 }

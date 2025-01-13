@@ -1,19 +1,27 @@
-
-// ProfileContent.tsx
 import { useState } from 'react';
 import { useProfileData } from './hooks/useProfileData';
 import { useMediaUpload } from './hooks/useMediaUpload';
 import { useProfileActions } from './hooks/useProfileActions';
 import { ProfileHeader } from '@/src/components/profile/ProfileHeader';
 import { AboutSection } from '@/src/components/profile/AboutSection';
-import { PortfolioSection } from '@/src/components/profile/PortfolioSection';
+import  PortfolioSection  from '@/src/components/profile/PortfolioSection';
 import SkillsSection from '@/src/components/profile/SkillsSection';
+import LanguageSection from '@/src/components/profile/LanguageSection';
 import LocationSection from '@/src/components/profile/LocationSection';
 import type { LocationData } from '@/src/types/location';
+import ProfileActions from '@/src/components/profile/ProfileActions';
+
+interface Props {
+
+  initialLocations: LocationData[];
+
+  onLocationSelect: (locationData: LocationData[]) => Promise<void>;
+
+}
 
 export function ProfileContent() {
   const [editingAbout, setEditingAbout] = useState(false);
-  const [location, setLocation] = useState<LocationData | null>(null);
+  const [userLocations, setUserLocations] = useState<LocationData[]>([]);
 
   const {
     user,
@@ -24,6 +32,8 @@ export function ProfileContent() {
     setImageUrl,
     skills,
     setSkills,
+    languages,
+    setLanguages,
     portfolioImages,
     setPortfolioImages,
     portfolioVideo,
@@ -43,6 +53,7 @@ export function ProfileContent() {
   const {
     handleAboutMeSubmit,
     handleSkillsSubmit,
+    handleLanguagesSubmit,
     handleRemovePortfolioImage,
     handleRemoveVideo,
   } = useProfileActions({
@@ -83,18 +94,18 @@ export function ProfileContent() {
         onSubmit={handleAboutMeSubmit}
       />
       <LocationSection
-        initialLocation={location}
-        onLocationSelect={async (locationData) => {
+        initialLocations={userLocations}
+        onLocationSelect={async (locationData: LocationData[]) => {
           try {
             const response = await fetch('/api/profile/location', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(locationData),
+              body: JSON.stringify({ locations: locationData }),
             });
             if (!response.ok) throw new Error('Failed to update location');
             const updatedUser = await response.json();
             setUser(updatedUser);
-            setLocation(locationData);
+            setUserLocations(locationData);
           } catch (error) {
             console.error('Failed to update location:', error);
             throw error;
@@ -112,6 +123,17 @@ export function ProfileContent() {
           }
         }} 
       />
+      <LanguageSection 
+        selectedLanguages={languages} 
+        onLanguagesChange={async (newLanguages) => {
+          try {
+            await handleLanguagesSubmit(newLanguages);
+            setLanguages(newLanguages);
+          } catch (error) {
+            throw error;
+          }
+        }} 
+      />
       <PortfolioSection
         portfolioImages={portfolioImages}
         portfolioVideo={portfolioVideo}
@@ -121,6 +143,8 @@ export function ProfileContent() {
         onRemoveImage={handleRemovePortfolioImage}
         onRemoveVideo={handleRemoveVideo}
       />
+      <ProfileActions />
+
     </div>
   );
 }
