@@ -4,14 +4,28 @@ import { Dispatch, SetStateAction } from 'react';
 // src/types/task.ts
 export interface Task {
   id: string;
+  applicationDeadline?: string | Date;
+
   title: string;
   description: string;
-  budget: number;
+  budget: number | null;
   status: string;
-  category: string;
-  subcategory: string;
   createdAt: string;
   bids: Bid[];
+  type: string;  // Added this field
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  employmentType?: string;
+  isRemote?: boolean;
+  location?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  benefits?: string;
+  requiredDocuments?: {
+    cv: boolean;
+    coverLetter: boolean;
+    certificates: boolean;
+  };
   createdBy: {
     firstName: string;
     lastName: string;

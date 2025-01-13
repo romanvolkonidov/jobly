@@ -20,6 +20,10 @@ const Hero = () => {
     router.push('/create-task/general-task');
   };
 
+  const handlePostVacancy = () => {
+    router.push('/create-job');
+  };
+
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 text-center">
@@ -56,10 +60,13 @@ const Hero = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-2">Hiring?</h2>
             <p className="text-gray-600 mb-4">Post a job vacancy</p>
-            <a href="/post-vacancy" className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors w-full">
+            <button
+              onClick={handlePostVacancy}
+              className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors w-full"
+            >
               Post Vacancy
               <ArrowRight size={20} />
-            </a>
+            </button>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/src/components/ui/Card';
 import { FileText, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import ResumeForm from './ResumeForm';
@@ -6,8 +6,25 @@ import ViewResume from './ViewResume';
 import BusinessForm from './BusinessForm';
 import ViewCompany from './ViewCompany';
 
-const ProfileActions = () => {
-  const [expandedSection, setExpandedSection] = useState<'resume' | 'business' | null>(null);
+export default function ProfileActions() {
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for stored section to expand
+    const sectionToExpand = localStorage.getItem('expandProfileSection');
+    if (sectionToExpand) {
+      setExpandedSection(sectionToExpand);
+      // Add small delay to ensure DOM is updated before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(`profile-section-${sectionToExpand}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      localStorage.removeItem('expandProfileSection'); // Clear after using
+    }
+  }, []);
+
   const [isEditingResume, setIsEditingResume] = useState(false);
   const [isEditingCompany, setIsEditingCompany] = useState(false);
 
@@ -28,7 +45,10 @@ const ProfileActions = () => {
       {/* Cards Container */}
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         {/* Resume Card */}
-        <Card className="relative overflow-hidden">
+        <Card 
+          id="profile-section-resume"
+          className="relative overflow-hidden"
+        >
           <CardContent 
             className="p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
             onClick={() => toggleSection('resume')}
@@ -113,5 +133,3 @@ const ProfileActions = () => {
     </div>
   );
 };
-
-export default ProfileActions;

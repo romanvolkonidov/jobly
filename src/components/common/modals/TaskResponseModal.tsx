@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface TaskResponseModalProps {
   taskTitle: string;
@@ -25,35 +26,19 @@ export default function TaskResponseModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const parsedPrice = Number(price);
-
-    if (isNaN(parsedPrice) || parsedPrice <= 0) {
-      setError('Please enter a valid price.');
-      return;
-    }
-
-    if (parsedPrice > maxBudget) {
-      setError(`Price cannot exceed ${maxBudget.toLocaleString()} KES.`);
-      return;
-    }
-
-    if (message.trim() === '') {
-      setError('Message is required.');
-      return;
-    }
-
     setError(null);
     setIsSubmitting(true);
 
     try {
-      await onResponse(parsedPrice, message);
+      await onResponse(Number(price), message);
       setPrice('');
       setMessage('');
+      toast.success('Proposal submitted successfully');
       onClose();
-    } catch (submitError) {
-      console.error('Submission error:', submitError);
-      setError('Failed to send the response. Please try again.');
+    } catch (error) {
+      console.error('Submission error:', error);
+      setError('Failed to submit proposal. Please try again.');
+      toast.error('Failed to submit proposal');
     } finally {
       setIsSubmitting(false);
     }

@@ -14,6 +14,9 @@ interface WhereClause {
   subcategory?: {
     in: string[];
   };
+  type?: {
+    in: string[];
+  };
   OR?: {
     title?: {
       contains: string;
@@ -39,6 +42,7 @@ export async function GET(req: Request) {
     const categories = searchParams.get('categories')?.split(',');
     const subcategories = searchParams.get('subcategories')?.split(',');
     const searchQuery = searchParams.get('search')?.trim();
+    const type = searchParams.get('type');
 
     const where: WhereClause = { status };
 
@@ -62,6 +66,10 @@ export async function GET(req: Request) {
 
     if (subcategories?.length) {
       where.subcategory = { in: subcategories };
+    }
+
+    if (type) {
+      where.type = { in: [type] };
     }
 
     const total = await prisma.task.count({ where });

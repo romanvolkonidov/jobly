@@ -56,6 +56,7 @@ generator client {
     placeId           String?
     latitude          Float?
     longitude         Float?
+    applications      JobApplication[]
 
     @@index([email])
     @@index([verificationToken])
@@ -77,12 +78,26 @@ generator client {
     bids        Bid[]     @relation("TaskBids")
     messages    Message[] @relation("TaskMessages")
     needsBusinessDoc Boolean @default(false)
+    type        String    @default("task") // Add this field to distinguish between tasks and vacancies
+    // Vacancy specific fields
+    employmentType String?
+    isRemote      Boolean?
+    responsibilities String?
+    qualifications  String?
+    benefits        String?
+    salaryMin      Float?
+    salaryMax      Float?
+    applicationDeadline DateTime?
+    requiredDocuments   Json?
+    languages          Json?
+    applications       JobApplication[]
 
     createdBy   User      @relation("TaskCreator", fields: [userId], references: [id])
 
     @@index([userId])
     @@index([category])
     @@index([status])
+    @@index([type])
   }
 
   model Bid {
@@ -247,6 +262,7 @@ model Company {
     description        String
     registrationNumber String?
     website            String?
+    
     industry          String
     email             String
     phone             String
@@ -262,3 +278,21 @@ model Company {
     @@index([userId])
     @@index([industry])
 }
+
+model JobApplication {
+  id          String    @id @default(cuid())
+  taskId      String    // References the Task (vacancy)
+  userId      String    // References the User
+  status      String    @default("pending")
+  cvUrl       String?   // URL to uploaded CV
+  coverLetter String?   // Text content or URL to uploaded file
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  task        Task      @relation(fields: [taskId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+

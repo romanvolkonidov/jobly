@@ -70,9 +70,7 @@ export default function MessagesButton() {
         isOpen={isOpen} 
         onClose={() => {
           setIsOpen(false);
-          if (error) {
-            checkUnreadMessages(); // Retry on close if there was an error
-          }
+          checkUnreadMessages(); // Always check unread messages when modal closes
         }}
         onMessagesRead={checkUnreadMessages}
         isLoading={isLoading}

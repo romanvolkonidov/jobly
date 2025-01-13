@@ -13,12 +13,19 @@ export default function RegisterPage() {
     setLoading(true);
   
     const formData = new FormData(event.currentTarget);
-    const email = formData.get('email');
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirmPassword');
-    const firstName = formData.get('firstName');
-    const lastName = formData.get('lastName');
+    const email = formData.get('email')?.toString().trim();
+    const password = formData.get('password')?.toString();
+    const confirmPassword = formData.get('confirmPassword')?.toString();
+    const firstName = formData.get('firstName')?.toString().trim();
+    const lastName = formData.get('lastName')?.toString().trim();
   
+    // Validate all fields are present
+    if (!email || !password || !confirmPassword || !firstName || !lastName) {
+      toast.error('All fields are required');
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       setLoading(false);
@@ -76,7 +83,20 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-            <label htmlFor="email" className="sr-only">
+              <label htmlFor="lastName" className="sr-only">
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Last name"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="sr-only">
                 Email address
               </label>
               <input

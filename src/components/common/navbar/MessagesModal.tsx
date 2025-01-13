@@ -1,4 +1,3 @@
-
 // src/components/common/navbar/MessagesModal.tsx
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
@@ -88,6 +87,7 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation);
+      markMessagesAsRead(selectedConversation);
     }
   }, [selectedConversation]);
 
@@ -102,6 +102,24 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
       toast.error('Failed to load messages');
     } finally {
       setMessagesLoading(false);
+    }
+  };
+
+  const markMessagesAsRead = async (conversationId: string) => {
+    try {
+      const response = await fetch('/api/messages/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conversationId }),
+      });
+
+      if (response.ok) {
+        onMessagesRead(); // Call the prop to update unread count
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
     }
   };
 
