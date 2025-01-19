@@ -1,5 +1,5 @@
 // src/components/common/navbar/MessagesModal.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -84,14 +84,7 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
     }
   }, [initialTaskId]);
 
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation);
-      markMessagesAsRead(selectedConversation);
-    }
-  }, [selectedConversation]);
-
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     setMessagesLoading(true);
     try {
       const response = await fetch(`/api/messages/${conversationId}`);
@@ -103,9 +96,9 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
     } finally {
       setMessagesLoading(false);
     }
-  };
+  }, []); // Empty dependency array since it doesn't depend on any props or state
 
-  const markMessagesAsRead = async (conversationId: string) => {
+  const markMessagesAsRead = useCallback(async (conversationId: string) => {
     try {
       const response = await fetch('/api/messages/mark-read', {
         method: 'POST',
@@ -116,12 +109,19 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
       });
 
       if (response.ok) {
-        onMessagesRead(); // Call the prop to update unread count
+        onMessagesRead();
       }
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }
-  };
+  }, [onMessagesRead]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation);
+      markMessagesAsRead(selectedConversation);
+    }
+  }, [selectedConversation, markMessagesAsRead, fetchMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

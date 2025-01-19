@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/badge';
 import { X, Plus, ChevronLeft } from 'lucide-react';
@@ -32,8 +32,9 @@ const SkillsSection = ({ selectedSkills = [] as string[], onSkillsChange }: Prop
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
       setCategories(data);
-    } catch (err) {
-      setError('Failed to load categories');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load categories';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +45,7 @@ const SkillsSection = ({ selectedSkills = [] as string[], onSkillsChange }: Prop
     setIsAddingSkill(true);
   };
 
-  const handleSkillSelect = async (subcategory: string) => {
+  const handleSkillSelect = useCallback(async (subcategory: string) => {
     if (subcategory === 'Something else') {
       setShowCustomInput(true);
       return;
@@ -66,7 +67,7 @@ const SkillsSection = ({ selectedSkills = [] as string[], onSkillsChange }: Prop
         console.error('Failed to add skill:', error);
       }
     }
-  };
+  }, [selectedSkills, onSkillsChange]);
 
   const handleCustomSkillSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,4 +234,4 @@ const SkillsSection = ({ selectedSkills = [] as string[], onSkillsChange }: Prop
     );
 };
 
-export default SkillsSection;
+export default memo(SkillsSection);

@@ -64,7 +64,6 @@ export default withAuth(
 // Update matcher to exclude login/signup pages from auth check
 export const config = {
   matcher: [
-    '/dashboard/:path*',
     '/profile/:path*', 
     '/settings/:path*'  // Added this line
   ]

@@ -28,10 +28,25 @@ export function UserMenu({
   isUserMenuOpen,
   setIsUserMenuOpenAction,
   onLogoutAction,
-  imageUrl
+  imageUrl,
+  isLoading
 }: Props) {
-  const { data: session } = useSession();
-  const isAuthenticated = !!session;
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated" && !!session;
+
+  // Add protection against unauthenticated state
+  if (!isAuthenticated || status !== "authenticated") {
+    return (
+      <div className="flex space-x-2">
+        <Link href="/auth/signup" className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">
+          Sign Up
+        </Link>
+        <Link href="/auth/login" className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">
+          Login
+        </Link>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {

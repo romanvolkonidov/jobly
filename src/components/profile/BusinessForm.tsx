@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent } from '@/src/components/ui/Card';
 import { Plus, X, Upload, ChevronDown, ChevronUp, Edit } from 'lucide-react';
 import Image from 'next/image';
@@ -56,10 +56,6 @@ const BusinessForm = ({ onCancel }: BusinessFormProps) => {
     }
   });
 
-  useEffect(() => {
-    fetchCompanyData();
-  }, []);
-
   const fetchCompanyData = async () => {
     try {
       setIsLoading(true);
@@ -70,18 +66,23 @@ const BusinessForm = ({ onCancel }: BusinessFormProps) => {
 
       const companies = await response.json();
       if (companies.length > 0) {
-        const company = companies[0];
-        setFormData(company);
-        // Ensure logo is properly set from company data
-        setLogo(company.logo || null);
+        setFormData(companies[0]);
+        setLogo(companies[0].logo || null);
       }
-    } catch (error) {
-      console.error('Error fetching company data:', error);
-      toast.error('Failed to load company data');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load company data';
+      console.error('Error fetching company data:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCompanyData();
+    return () => controller.abort();
+  }, []);
 
   const toggleSection = useCallback((section: string, event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
@@ -528,4 +529,4 @@ const BusinessForm = ({ onCancel }: BusinessFormProps) => {
   );
 };
 
-export default BusinessForm;
+export default memo(BusinessForm);

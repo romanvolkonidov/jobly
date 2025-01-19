@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/badge';
 import { MapPin, Loader2, X, Plus } from 'lucide-react';
@@ -20,41 +20,7 @@ const LocationSection = ({ initialLocations = [] }: Props) => {
   const autoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const response = await fetch('/api/profile/location');
-        const data = await response.json();
-        if (data.locations) {
-          setLocations(data.locations);
-        }
-      } catch (error) {
-        toast.error('Failed to load locations');
-      }
-    };
-
-    fetchLocations();
-  }, []);
-
-  const updateLocations = async (newLocations: LocationData[]) => {
-    try {
-      const response = await fetch('/api/profile/location', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locations: newLocations })
-      });
-      
-      if (!response.ok) throw new Error('Failed to update locations');
-      
-      const data = await response.json();
-      setLocations(data.locations || newLocations);
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handlePlaceSelect = async () => {
+  const handlePlaceSelect = useCallback(async () => {
     if (!autoCompleteRef.current || !inputRef.current) return;
     if (locations.length >= 5) {
       toast.error('Maximum 5 locations allowed');
@@ -111,6 +77,48 @@ const LocationSection = ({ initialLocations = [] }: Props) => {
     } finally {
       setIsLoading(false);
     }
+  }, [locations]);
+
+  useEffect(() => {
+    if (initialLocations.length > 0) return;
+    
+    const controller = new AbortController();
+    
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch('/api/profile/location', {
+          signal: controller.signal
+        });
+        const data = await response.json();
+        if (data.locations) {
+          setLocations(data.locations);
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        toast.error('Failed to load locations');
+      }
+    };
+
+    fetchLocations();
+    return () => controller.abort();
+  }, [initialLocations]);
+
+  const updateLocations = async (newLocations: LocationData[]) => {
+    try {
+      const response = await fetch('/api/profile/location', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations: newLocations })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update locations');
+      
+      const data = await response.json();
+      setLocations(data.locations || newLocations);
+      return data;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const removeLocation = async (placeId: string) => {
@@ -156,7 +164,7 @@ const LocationSection = ({ initialLocations = [] }: Props) => {
         google.maps.event.clearInstanceListeners(autoCompleteRef.current);
       }
     };
-  }, [isAddingLocation]);
+  }, [isAddingLocation, handlePlaceSelect]);
 
   return (
     <Card className="mb-8">
@@ -217,4 +225,4 @@ const LocationSection = ({ initialLocations = [] }: Props) => {
   );
 };
 
-export default LocationSection;
+export default memo(LocationSection);

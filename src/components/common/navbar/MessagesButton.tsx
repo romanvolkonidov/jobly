@@ -1,14 +1,18 @@
 import { MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import MessagesModal from './MessagesModal';
+import { useSession } from 'next-auth/react';
 
 export default function MessagesButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { status } = useSession();
 
   const checkUnreadMessages = async () => {
+    if (status !== "authenticated") return;
+    
     try {
       setError(null);
       const response = await fetch('/api/messages/unread');
@@ -28,11 +32,16 @@ export default function MessagesButton() {
   };
 
   useEffect(() => {
-    const interval = setInterval(checkUnreadMessages, 30000);
-    checkUnreadMessages();
+    if (status === "authenticated") {
+      const interval = setInterval(checkUnreadMessages, 30000);
+      checkUnreadMessages();
+      return () => clearInterval(interval);
+    }
+  }, [status]);
 
-    return () => clearInterval(interval);
-  }, []);
+  if (status !== "authenticated") {
+    return null;
+  }
 
   return (
     <>

@@ -11,6 +11,7 @@ import DesktopMenu from './DesktopMenu';
 import MessagesButton from './MessagesButton';
 import { withLazyLoading } from '@/src/components/common/Performance';
 import { UserMenu } from './UserMenu';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; // Add useQueryClient
 
 interface UserData {
   id: string;
@@ -31,66 +32,69 @@ interface UserData {
 
 function Navbar() {
   const router = useRouter();
+  const queryClient = useQueryClient(); // Add this line
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { data: session, status } = useSession();
   const isAuthenticated = !!session;
-  const [userImageUrl, setUserImageUrl] = useState<string>('/default-avatar.png');
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!session?.user?.id) {
-        setIsLoading(false);
-        return;
-      }
+  // Replace the useEffect + useState with useQuery
+  const { data: userData, isLoading: profileLoading } = useQuery({
+    queryKey: ['userData', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const response = await fetch('/api/profile', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      return response.json();
+    },
+    enabled: !!session?.user?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 30,
+  });
 
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/profile', { credentials: 'include' });
-        if (!response.ok) {
-          console.error('Failed to fetch user data:', response.statusText);
-          return;
-        }
-        const userData: UserData = await response.json();
-        setUserImageUrl(userData.imageUrl || '/default-avatar.png');
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [session?.user?.id]);
+  // Use session image if available, fall back to userData, then default
+  const userImageUrl = session?.user?.image || userData?.imageUrl || '/default-avatar.png';
+  const isLoading = status === "loading" || (isAuthenticated && !session.user.image && profileLoading);
 
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
-      await signOut({ redirect: false });
+      await signOut({ 
+        redirect: false,
+        callbackUrl: '/auth/login'
+      });
+      // Clear React Query cache
+      queryClient.clear();
+      // Force revalidate session
+      await queryClient.invalidateQueries({ queryKey: ['userData'] });
+      // Reset local state
+      setIsUserMenuOpen(false);
+      setIsMobileMenuOpen(false);
+      // Redirect after cleanup
       router.push('/auth/login');
     } catch (error) {
       console.error('Error during logout:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  if (status === "loading" || isLoading) {
-    return (
-      <div className="fixed w-full top-0 z-50 bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
-          <div className="flex items-center justify-between h-full">
-            <div className="w-24 h-8 bg-gray-200 rounded animate-pulse" />
-            <div className="flex space-x-4">
-              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Add immediate check for authentication
+  useEffect(() => {
+    const handleAuthChange = () => {
+      if (status === "unauthenticated") {
+        setIsUserMenuOpen(false);
+        setIsMobileMenuOpen(false);
+        queryClient.clear();
+        router.replace('/auth/login');
+      }
+    };
+
+    handleAuthChange();
+    return () => {
+      queryClient.clear();
+    };
+  }, [status, queryClient, router]);
+
+  // Update the isAuthenticated check to be more strict
+  const isFullyAuthenticated = isAuthenticated && status === "authenticated";
 
   return (
     <motion.nav 
@@ -98,7 +102,7 @@ function Navbar() {
       animate={{ opacity: 1, y: 0 }}
       className="fixed w-full top-0 z-50 bg-white border-b"
     >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
         <div className="flex items-center space-x-4">
           <Link 
             href="/" 
@@ -110,15 +114,9 @@ function Navbar() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {isAuthenticated && (
+          {isFullyAuthenticated && (
             <>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-              >
-                <MessagesButton />
-              </motion.div>
+              <MessagesButton />
               <motion.button 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

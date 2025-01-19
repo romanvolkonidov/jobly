@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/badge';
 import { X, Plus } from 'lucide-react';
@@ -15,25 +15,7 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
   const [isAddingLanguage, setIsAddingLanguage] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
 
-  // Fetch initial languages
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        const response = await fetch('/api/profile/languages');
-        const data = await response.json();
-        if (data.languages) {
-          setSelectedLanguages(data.languages);
-        }
-      } catch (error) {
-        console.error('Failed to fetch languages:', error);
-        toast.error('Failed to load languages');
-      }
-    };
-
-    fetchLanguages();
-  }, []);
-
-  const updateLanguages = async (newLanguages: string[]) => {
+  const updateLanguages = useCallback(async (newLanguages: string[]) => {
     try {
       const response = await fetch('/api/profile/languages', {
         method: 'PUT',
@@ -48,13 +30,38 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
       const data = await response.json();
       setSelectedLanguages(data.languages || newLanguages);
       return data;
-    } catch (error) {
-      console.error('Failed to update languages:', error);
-      throw error;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update languages';
+      console.error('Failed to update languages:', errorMessage);
+      throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const handleLanguageSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (initialLanguages.length > 0) return;
+    
+    const controller = new AbortController();
+    
+    const fetchLanguages = async () => {
+      try {
+        const response = await fetch('/api/profile/languages', {
+          signal: controller.signal
+        });
+        const data = await response.json();
+        if (data.languages) {
+          setSelectedLanguages(data.languages);
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        toast.error('Failed to load languages');
+      }
+    };
+
+    fetchLanguages();
+    return () => controller.abort();
+  }, [initialLanguages]);
+
+  const handleLanguageSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (newLanguage) {
@@ -82,7 +89,7 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
         console.error('Failed to add language:', error);
       }
     }
-  };
+  }, [selectedLanguages, newLanguage, updateLanguages]);
 
   const removeLanguage = async (language: string) => {
     try {
@@ -168,4 +175,4 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
   );
 };
 
-export default LanguageSection;
+export default memo(LanguageSection);

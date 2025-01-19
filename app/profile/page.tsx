@@ -1,8 +1,20 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ProfileContent } from './ProfileContent';
+import { ProfileSkeleton } from '@/src/components/skeletons/ProfileSkeleton';
+
+// Prefetch data URLs
+const PREFETCH_URLS = [
+  '/api/profile',
+  '/api/resumes',
+  '/api/companies',
+  '/api/categories',
+  '/api/profile/portfolio-image',
+  '/api/profile/languages',
+  '/api/profile/location'
+];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -13,20 +25,24 @@ export default function ProfilePage() {
     },
   });
 
+  // Prefetch resources
+  useEffect(() => {
+    // Prefetch API data
+    PREFETCH_URLS.forEach(url => {
+      fetch(url, { priority: 'high' });
+    });
+
+    // Prefetch related pages
+    router.prefetch('/settings');
+    router.prefetch('/dashboard');
+  }, [router]);
+
   if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-pulse text-gray-600">Loading...</div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-pulse text-gray-600">Loading profile...</div>
-      </div>
-    }>
+    <Suspense fallback={<ProfileSkeleton />}>
       <ProfileContent />
     </Suspense>
   );

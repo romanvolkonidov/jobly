@@ -50,7 +50,10 @@ export const ProfileHeader = ({
             src={imageUrl || '/default-avatar.png'}
             alt={user ? `${user.firstName} ${user.lastName}` : 'Profile'}
             fill
+            priority={true} // Prioritize loading
+            sizes="128px"
             className="rounded-full object-cover transition-opacity duration-200"
+            loading="eager" // Load immediately
           />
           {isUploading && (
             <div className="absolute inset-0 flex items-center justify-center">

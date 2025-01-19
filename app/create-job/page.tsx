@@ -42,7 +42,7 @@ export default function CreateVacancyPage() {
       if (!response.ok) throw new Error('Failed to create vacancy');
 
       toast.success('Vacancy posted successfully!');
-      router.push('/dashboard/vacancies');
+      router.push('/projects');
     } catch (error) {
       toast.error('Failed to post vacancy');
     }

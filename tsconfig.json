@@ -48,8 +48,9 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "test-connection.mjs",
-    "email-test.ts"
-, "next.config.js"  ],
+    "email-test.ts",
+    "next.config.js"
+  ],
   "exclude": [
     "node_modules"
   ]

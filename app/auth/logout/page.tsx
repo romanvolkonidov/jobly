@@ -26,7 +26,7 @@ export default function LoginPage() {
         toast.error(result.error);
       } else {
         toast.success('Successfully signed in!');
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch {
       toast.error('An unexpected error occurred');
