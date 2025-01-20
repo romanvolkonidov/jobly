@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
 import Image from 'next/image';
@@ -6,6 +8,12 @@ interface Profile {
   firstName: string;
   lastName: string;
   email: string;
+}
+
+interface ViewCompanyProps {
+  userId: string;
+  onEdit?: () => void; // Make onEdit optional
+  initialData?: BusinessData | null;
 }
 
 interface BusinessData {
@@ -29,13 +37,9 @@ interface BusinessData {
   };
 }
 
-interface ViewCompanyProps {
-  onEdit: () => void;
-  initialData?: BusinessData | null;
-}
-
-const ViewCompany: React.FC<ViewCompanyProps> = ({
+const ViewCompanyComponent: React.FC<ViewCompanyProps> = ({
   onEdit,
+  userId,
   initialData = null,
 }) => {
   const [data, setData] = useState<BusinessData | null>(null);
@@ -45,7 +49,8 @@ const ViewCompany: React.FC<ViewCompanyProps> = ({
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/profile');
+        // Updated to fetch the profile of the viewed user
+        const response = await fetch(`/api/profile/${userId}`);
         if (response.ok) {
           setProfile(await response.json());
         }
@@ -55,49 +60,44 @@ const ViewCompany: React.FC<ViewCompanyProps> = ({
     };
 
     fetchProfile();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    if (initialData) {
-      setData(initialData);
-      setIsLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/companies');
-        if (!response.ok) throw new Error('Failed to fetch company');
-        const companies = await response.json();
-        if (companies.length > 0) {
-          setData(companies[0]);
-        }
+        const response = await fetch(`/api/companies/user/${userId}`);
+        const company = await response.json();
+        setData(company);  // Set data regardless of content
       } catch (error) {
         console.error('Error loading company:', error);
+        setData(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [initialData]);
+    if (!initialData) {
+      fetchData();
+    } else {
+      setData(initialData);
+      setIsLoading(false);
+    }
+  }, [initialData, userId]);
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center h-64">Loading...</div>
-    );
-  if (!data)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <p className="text-gray-600">No company profile available.</p>
+  if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
+  if (!data?.id) return (  // Only check for id instead of name and description
+    <div className="flex flex-col items-center justify-center h-64 space-y-4">
+      <p className="text-gray-600">No company profile available.</p>
+      {onEdit && (
         <button
           onClick={onEdit}
           className="flex items-center gap-2 px-4 py-2 text-purple-600 border border-purple-600 rounded-md hover:bg-purple-50"
         >
           <Edit className="w-4 h-4" /> Create Company Profile
         </button>
-      </div>
-    );
+      )}
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto bg-white">
@@ -121,12 +121,14 @@ const ViewCompany: React.FC<ViewCompanyProps> = ({
               {data.locations && data.locations[0] && ` • ${data.locations[0]}`}
             </div>
           </div>
-          <button
-            onClick={onEdit}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-md hover:bg-white/20"
-          >
-            <Edit className="w-4 h-4" /> Edit Profile
-          </button>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-md hover:bg-white/20"
+            >
+              <Edit className="w-4 h-4" /> Edit Profile
+            </button>
+          )}
         </div>
       </div>
 
@@ -245,4 +247,4 @@ const ViewCompany: React.FC<ViewCompanyProps> = ({
   );
 };
 
-export default ViewCompany;
+export default ViewCompanyComponent;

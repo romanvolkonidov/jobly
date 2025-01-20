@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface Profile {
   firstName: string;
@@ -8,6 +11,7 @@ interface Profile {
   imageUrl: string;
   email: string;
   locations: string[];
+  organization?: string; // Added organization field
 }
 
 interface Education {
@@ -40,7 +44,9 @@ interface Certification {
   credentialId?: string;
 }
 
+// Update the ResumeData interface to include id
 interface ResumeData {
+  id: string;  // Add this line
   title: string;
   summary: string;
   education: Education[];
@@ -48,13 +54,15 @@ interface ResumeData {
   certifications: Certification[];
   skills: string[];
   languages: string[];
+  resumeUrl?: string; // Added resumeUrl field
 }
 
 interface ViewResumeProps {
-  onEdit: () => void;
+  userId?: string;
+  onEdit?: () => void;
 }
 
-const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
+const ViewResume: React.FC<ViewResumeProps> = ({ userId, onEdit }) => {
   const [data, setData] = useState<ResumeData | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +70,8 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/profile');
+        // Updated to fetch the profile of the viewed user
+        const response = await fetch(`/api/profile/${userId}`);
         if (response.ok) {
           setProfile(await response.json());
         }
@@ -70,39 +79,38 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
         console.error('Error loading profile:', error);
       }
     };
-    
-    fetchProfile();
-  }, []);
+
+    if (userId) fetchProfile();
+  }, [userId]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/resumes');
-        if (!response.ok) throw new Error('Failed to fetch resume');
-        const resumes = await response.json();
-        if (resumes.length > 0) {
-          setData(resumes[0]);
-        }
+        const response = await fetch(`/api/resumes/user/${userId}`);
+        const resume = await response.json();
+        setData(resume);  // Set data regardless of content
       } catch (error) {
         console.error('Error loading resume:', error);
+        setData(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    if (userId) fetchData();
+  }, [userId]);
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
-  if (!data) return (
+  // Change the condition to check for title or other required fields if you don't want to use id
+  if (!data || !data.title) return (
     <div className="flex flex-col items-center justify-center h-64 space-y-4">
       <p className="text-gray-600">No resume data available.</p>
-      <button
+      {onEdit && <button
         onClick={onEdit}
         className="flex items-center gap-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
       >
         <Edit className="w-4 h-4" /> Create Resume
-      </button>
+      </button>}
     </div>
   );
 
@@ -125,14 +133,15 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
             <div className="mt-2 text-sm opacity-75">
               {profile?.email}
               {profile?.locations && profile.locations.length > 0 && ` • ${profile.locations[0]}`}
+              {profile?.organization && ` • ${profile.organization}`}
             </div>
           </div>
-          <button
+          {onEdit && <button
             onClick={onEdit}
             className="ml-auto flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-md hover:bg-white/20"
           >
             <Edit className="w-4 h-4" /> Edit Resume
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -216,7 +225,7 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
                 </div>
               </div>
             )}
-            
+
             {data.languages?.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Languages</h2>
@@ -230,6 +239,15 @@ const ViewResume: React.FC<ViewResumeProps> = ({ onEdit }) => {
               </div>
             )}
           </section>
+        )}
+        {data.resumeUrl && (
+          <Link
+            href={`/api/resumes/download/${userId}`}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            download="resume.pdf"
+          >
+            Download PDF
+          </Link>
         )}
       </div>
     </div>
