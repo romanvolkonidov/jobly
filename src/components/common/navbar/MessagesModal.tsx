@@ -8,6 +8,9 @@ import ProfilePreviewModal from './ProfilePreviewModal';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
+// Add type definitions for query errors
+type QueryError = Error;
+
 interface Message {
   id: string;
   content: string;
@@ -64,9 +67,21 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
   const [selectedConversation, setSelectedConversation] = useState<string | null>(initialTaskId || null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [messagesLoading, setMessagesLoading] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [isProfilePreviewOpen, setIsProfilePreviewOpen] = useState(false);
+  const [profilePreview, setProfilePreview] = useState<{
+    isOpen: boolean;
+    userId: string | null;
+  }>({
+    isOpen: false,
+    userId: null,
+  });
+
+  const handleProfileClick = useCallback((userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProfilePreview({
+      isOpen: true,
+      userId,
+    });
+  }, []);
 
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
     queryKey: ['conversations', viewType],
@@ -75,7 +90,10 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
       if (!response.ok) throw new Error('Failed to fetch conversations');
       return response.json() as Promise<Conversation[]>;
     },
-    enabled: isOpen
+    enabled: isOpen,
+    staleTime: 1000 * 30, // Data remains fresh for 30 seconds
+    refetchInterval: 1000 * 60, // Refetch every minute
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -84,19 +102,39 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
     }
   }, [initialTaskId]);
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    setMessagesLoading(true);
-    try {
-      const response = await fetch(`/api/messages/${conversationId}`);
+  const { data: messageData, isLoading: messagesLoading } = useQuery({
+    queryKey: ['messages', selectedConversation],
+    queryFn: async () => {
+      if (!selectedConversation) return [];
+      const response = await fetch(`/api/messages/${selectedConversation}`);
       if (!response.ok) throw new Error('Failed to fetch messages');
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      toast.error('Failed to load messages');
-    } finally {
-      setMessagesLoading(false);
+      return response.json();
+    },
+    enabled: !!selectedConversation && isOpen,
+    staleTime: 1000 * 30, // Data remains fresh for 30 seconds
+    refetchInterval: 1000 * 60, // Refetch every minute
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  // Handle error separately using onSuccess/onError callbacks
+  useEffect(() => {
+    const errorHandler = (error: unknown) => {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        toast.error('Failed to load messages', { id: 'message-fetch-error' });
+      }
+    };
+
+    if (messageData instanceof Error) {
+      errorHandler(messageData);
     }
-  }, []); // Empty dependency array since it doesn't depend on any props or state
+  }, [messageData]);
+
+  useEffect(() => {
+    if (messageData) {
+      setMessages(messageData);
+    }
+  }, [messageData]);
 
   const markMessagesAsRead = useCallback(async (conversationId: string) => {
     try {
@@ -118,12 +156,11 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation);
       markMessagesAsRead(selectedConversation);
     }
-  }, [selectedConversation, markMessagesAsRead, fetchMessages]);
+  }, [selectedConversation, markMessagesAsRead]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation) return;
 
@@ -134,6 +171,15 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
     }
 
     try {
+      setMessages(prev => [...prev, {
+        id: 'temp-' + Date.now(),
+        content: newMessage,
+        isSender: true,
+        timestamp: new Date().toISOString(),
+        fromUserId: 'current-user'
+      }]);
+      setNewMessage('');
+
       const response = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -144,22 +190,16 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
       });
 
       if (!response.ok) throw new Error('Failed to send message');
-
-      const sentMessage = await response.json();
-      setMessages(prev => [...prev, {
-        id: sentMessage.id,
-        content: newMessage,
-        isSender: true,
-        timestamp: new Date().toISOString(),
-        fromUserId: sentMessage.fromUserId
-      }]);
-      setNewMessage('');
     } catch (error) {
       toast.error('Failed to send message');
     }
-  };
+  }, [newMessage, selectedConversation, conversations]);
 
+  // Only show loading state on initial load
   if (!isOpen) return null;
+  if (isLoading) return <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-4">Loading...</div>
+  </div>;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -221,11 +261,7 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
                       width={40}
                       height={40}
                       className="rounded-full cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedUserId(conv.otherUserId);
-                        setIsProfilePreviewOpen(true);
-                      }}
+                      onClick={(e) => handleProfileClick(conv.otherUserId, e)}
                     />
                     <div>
                       <div className="font-medium">
@@ -314,11 +350,16 @@ function MessagesModal({ isOpen, onClose, onMessagesRead, initialTaskId, isLoadi
         </div>
       </div>
 
-      {selectedUserId && (
+      {profilePreview.userId && (
         <ProfilePreviewModal
-          userId={selectedUserId}
-          isOpen={isProfilePreviewOpen}
-          onClose={() => setIsProfilePreviewOpen(false)}
+          userId={profilePreview.userId}
+          isOpen={profilePreview.isOpen}
+          onClose={() => {
+            setProfilePreview({
+              isOpen: false,
+              userId: null,
+            });
+          }}
         />
       )}
     </div>

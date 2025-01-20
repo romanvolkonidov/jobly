@@ -19,15 +19,25 @@ export function useProfileActions({
         body: JSON.stringify({ aboutMe }),
         credentials: 'include',
       });
-
-      if (response.status === 401) return;
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      const data = await response.json();
-      setUser(data);
+  
+      if (response.status === 401) {
+        throw new Error('Unauthorized');
+      }
+  
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.message || 'Failed to update profile');
+        }
+        setUser(data);
+      } else if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+  
       setEditingAbout(false);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error(error);
       throw error;
     }
   };

@@ -2,10 +2,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: { userId: string } }
+) {
   try {
-    const url = new URL(req.url);
-    const userId = url.searchParams.get('userId');
+    const userId = params.userId;
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -29,14 +31,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Create response object with full name
-    const response = {
-      ...user,
-      fullName: `${user.firstName} ${user.lastName}`
-    };
-
-    return NextResponse.json(response);
-  } catch {
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error('Profile fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
 }

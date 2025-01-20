@@ -65,7 +65,7 @@ function MobileMenu({ closeAction, imageUrl, isLoading = false }: MobileMenuProp
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
-      className="fixed inset-0 z-50 bg-white overflow-y-auto p-6"
+      className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm overflow-y-auto p-6 shadow-xl"
     >
       <div className="flex justify-between mb-8">
         {isAuthenticated && (

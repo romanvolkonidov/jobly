@@ -10,11 +10,13 @@ type MenuToggleProps = {
 
 function MenuToggle({ isMobileMenuOpen, setIsMobileMenuOpen }: MenuToggleProps) {
   return (
-    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden">
-      <Menu className="h-6 w-6 text-gray-600" />
+    <button 
+      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+      className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+    >
+      <Menu className="h-5 w-5 text-gray-600" />
     </button>
   );
 }
 
 export default withLazyLoading(MenuToggle);
-

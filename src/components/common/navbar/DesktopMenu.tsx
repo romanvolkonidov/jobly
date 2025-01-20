@@ -15,6 +15,7 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [menuTop, setMenuTop] = useState(0);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (hoveredCategory && categoryRef.current) {
@@ -33,6 +34,18 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
     }
   }, [hoveredCategory]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+        setHoveredCategory(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="hidden md:flex space-x-6">
@@ -44,16 +57,17 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
   }
 
   return (
-    <div className="hidden md:flex space-x-6">
+    <div className="hidden md:flex items-center space-x-8">
       <div
-        className="relative"
+        ref={menuRef}
+        className="relative group"
         onMouseEnter={() => setIsMenuOpen(true)}
         onMouseLeave={() => {
           setIsMenuOpen(false);
           setHoveredCategory(null);
         }}
       >
-        <button className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200">
+        <button className="text-base font-medium text-gray-700 hover:text-orange-600 transition-all duration-200 flex items-center space-x-1 py-2">
           Create a Task
         </button>
         {isMenuOpen && (

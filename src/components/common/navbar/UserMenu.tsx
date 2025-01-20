@@ -2,7 +2,7 @@ import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, Settings, User } from 'lucide-react';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 
 declare module "next-auth" {
   interface Session {
@@ -34,6 +34,19 @@ export function UserMenu({
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated" && !!session;
 
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpenAction(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setIsUserMenuOpenAction]);
+
   // Add protection against unauthenticated state
   if (!isAuthenticated || status !== "authenticated") {
     return (
@@ -59,7 +72,7 @@ export function UserMenu({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       {isAuthenticated ? (
 <button 
   onClick={() => setIsUserMenuOpenAction(!isUserMenuOpen)}
