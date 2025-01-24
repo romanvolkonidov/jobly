@@ -5,26 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { TaskCard } from '@/src/components/tasks/TaskCard';
 import { TaskModal } from '@/src/components/tasks/TaskModal';
+import { Task } from '@/src/types/task';
 
 // src/types/task.ts
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  budget: number;
-  status: string;
-  category: string;
-  subcategory: string;
-  createdAt: string;
-  bids: Bid[];
-  createdBy: {
-    firstName: string;
-    lastName: string;
-    rating?: number;
-    reviewCount?: number;
-  };
-}
-
 export interface Bid {
   id: string;
   amount: number;
@@ -147,4 +130,4 @@ export default function ProjectsPage() {
       )}
     </div>
   );
-} 
+}

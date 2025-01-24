@@ -1,16 +1,14 @@
-//app/api/tasks/[taskId]/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
-// app/api/tasks/[taskId]/route.ts
 export async function GET(
   req: Request,
-  { params }: { params: { taskId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const task = await prisma.task.findUnique({
       where: {
-        id: params.taskId,
+        id: params.id,
       },
       include: {
         bids: true,

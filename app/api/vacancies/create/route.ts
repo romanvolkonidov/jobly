@@ -14,42 +14,47 @@ export async function POST(req: Request) {
       );
     }
 
-    const {
-      title,
-      employmentType,
-      location,
-      isRemote,
-      description,
-      responsibilities,
-      qualifications,
-      skills,
-      benefits,
-      salaryMin,
-      salaryMax,
-      applicationDeadline,
-      requiredDocuments,
-      languages,
-    } = await req.json();
+    const data = await req.json();
+
+    // Validate company posting
+    if (data.postedAs === 'company') {
+      // Check if user has access to this company
+      const company = await prisma.company.findFirst({
+        where: {
+          id: data.companyId,
+          userId: session.user.id
+        }
+      });
+
+      if (!company) {
+        return NextResponse.json(
+          { error: 'Unauthorized to post as this company' },
+          { status: 403 }
+        );
+      }
+    }
 
     const vacancy = await prisma.task.create({
       data: {
         type: 'vacancy',
-        title,
-        description,
-        location,
+        postedAs: data.postedAs || 'individual', // Default to individual if not specified
+        companyId: data.postedAs === 'company' ? data.companyId : null,
+        title: data.title,
+        description: data.description,
+        location: data.location,
         status: 'open',
-        employmentType,
-        isRemote,
-        responsibilities,
-        qualifications,
-        benefits,
-        salaryMin: salaryMin ? parseFloat(salaryMin) : null,
-        salaryMax: salaryMax ? parseFloat(salaryMax) : null,
-        applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
-        requiredDocuments,
-        languages,
+        employmentType: data.employmentType,
+        isRemote: data.isRemote,
+        responsibilities: data.responsibilities,
+        qualifications: data.qualifications,
+        benefits: data.benefits,
+        salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : null,
+        salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : null,
+        applicationDeadline: data.applicationDeadline ? new Date(data.applicationDeadline) : null,
+        requiredDocuments: data.requiredDocuments,
+        languages: data.languages,
         category: 'Jobs', // Default category for vacancies
-        subcategory: employmentType, // Use employment type as subcategory
+        subcategory: data.employmentType, // Use employment type as subcategory
         userId: session.user.id,
       },
     });

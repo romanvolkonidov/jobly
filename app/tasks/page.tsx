@@ -45,67 +45,6 @@ export default function TaskListingPage() {
     setPage(1);
   }, 300);
 
-  const toggleCategory = (categoryName: string) => {
-    setSelectedFilters(prev => {
-      const categorySubcategories = categories.find(c => c.name === categoryName)?.subcategories || [];
-      
-      if (prev.categories.includes(categoryName)) {
-        return {
-          categories: prev.categories.filter(c => c !== categoryName),
-          subcategories: prev.subcategories.filter(s => !categorySubcategories.includes(s))
-        };
-      } else {
-        return {
-          categories: [...prev.categories, categoryName],
-          subcategories: [...prev.subcategories, ...categorySubcategories]
-        };
-      }
-    });
-    setPage(1);
-  };
-
-  const toggleSubcategory = (subcategory: string, categoryName: string) => {
-    setSelectedFilters(prev => {
-      const newSubcategories = prev.subcategories.includes(subcategory)
-        ? prev.subcategories.filter(s => s !== subcategory)
-        : [...prev.subcategories, subcategory];
-
-      const categorySubcategories = categories.find(c => c.name === categoryName)?.subcategories || [];
-      const allCategorySubcategoriesSelected = categorySubcategories.every(s => newSubcategories.includes(s));
-      const noCategorySubcategoriesSelected = categorySubcategories.every(s => !newSubcategories.includes(s));
-
-      const newCategories = allCategorySubcategoriesSelected
-        ? [...new Set([...prev.categories, categoryName])]
-        : noCategorySubcategoriesSelected
-          ? prev.categories.filter(c => c !== categoryName)
-          : prev.categories;
-
-      return {
-        categories: newCategories,
-        subcategories: newSubcategories
-      };
-    });
-    setPage(1);
-  };
-
-  const toggleExpand = (category: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  const toggleAll = () => {
-    setSelectedFilters(prev => ({
-      categories: prev.categories.length === categories.length ? [] : categories.map(c => c.name),
-      subcategories: prev.subcategories.length === categories.reduce((acc, cat) => acc + cat.subcategories.length, 0)
-        ? []
-        : categories.flatMap(c => c.subcategories)
-    }));
-    setPage(1);
-  };
-
   const { data, isLoading, error } = useQuery<PaginatedResponse>({
     queryKey: ['tasks', page, filters, selectedFilters],
     queryFn: async () => {
@@ -146,6 +85,8 @@ export default function TaskListingPage() {
                   />
                 </div>
               </div>
+              
+              {/* Filters */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Budget Range
@@ -188,7 +129,10 @@ export default function TaskListingPage() {
                 </label>
                 <select
                   value={filters.sortOrder}
-                  onChange={(e) => setFilters(prev => ({ ...prev, sortOrder: e.target.value as 'asc' | 'desc' }))}
+                  onChange={(e) => setFilters(prev => ({ 
+                    ...prev, 
+                    sortOrder: e.target.value as 'asc' | 'desc' 
+                  }))}
                   className="w-full p-2 border rounded"
                 >
                   <option value="desc">Descending</option>
@@ -198,6 +142,7 @@ export default function TaskListingPage() {
             </div>
           </div>
 
+          {/* Task List */}
           <h1 className="text-2xl font-semibold mb-6">
             Available Tasks {data?.pagination.total ? `(${data.pagination.total})` : ''}
           </h1>
@@ -234,6 +179,7 @@ export default function TaskListingPage() {
                 )}
               </div>
 
+              {/* Pagination */}
               {data?.pagination.pages && data.pagination.pages > 1 && (
                 <div className="mt-6 flex justify-center gap-2">
                   {[...Array(data.pagination.pages)].map((_, i) => (
@@ -258,23 +204,16 @@ export default function TaskListingPage() {
         {/* Categories Sidebar */}
         <div className="w-72 flex-shrink-0">
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="mb-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedFilters.categories.length === categories.length}
-                  onChange={toggleAll}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 font-medium">Show All</span>
-              </label>
-            </div>
             <div className="space-y-2">
               {categories.map((category) => (
                 <div key={category.name} className="space-y-1">
                   <div className="flex items-center">
                     <button
-                      onClick={() => toggleExpand(category.name)}
+                      onClick={() => setExpandedCategories(prev =>
+                        prev.includes(category.name)
+                          ? prev.filter(c => c !== category.name)
+                          : [...prev, category.name]
+                      )}
                       className="mr-2 p-1 hover:bg-gray-100 rounded"
                     >
                       {expandedCategories.includes(category.name) ? (
@@ -287,7 +226,27 @@ export default function TaskListingPage() {
                       <input
                         type="checkbox"
                         checked={selectedFilters.categories.includes(category.name)}
-                        onChange={() => toggleCategory(category.name)}
+                        onChange={() => {
+                          setSelectedFilters(prev => {
+                            if (prev.categories.includes(category.name)) {
+                              return {
+                                categories: prev.categories.filter(c => c !== category.name),
+                                subcategories: prev.subcategories.filter(s => 
+                                  !category.subcategories.includes(s)
+                                )
+                              };
+                            } else {
+                              return {
+                                categories: [...prev.categories, category.name],
+                                subcategories: [
+                                  ...prev.subcategories,
+                                  ...category.subcategories
+                                ]
+                              };
+                            }
+                          });
+                          setPage(1);
+                        }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="ml-2">{category.name}</span>
@@ -301,7 +260,34 @@ export default function TaskListingPage() {
                           <input
                             type="checkbox"
                             checked={selectedFilters.subcategories.includes(subcategory)}
-                            onChange={() => toggleSubcategory(subcategory, category.name)}
+                            onChange={() => {
+                              setSelectedFilters(prev => {
+                                const newSubcategories = prev.subcategories.includes(subcategory)
+                                  ? prev.subcategories.filter(s => s !== subcategory)
+                                  : [...prev.subcategories, subcategory];
+
+                                const categorySubcategories = categories.find(
+                                  c => c.name === category.name
+                                )?.subcategories || [];
+                                
+                                const allSelected = categorySubcategories.every(
+                                  s => newSubcategories.includes(s)
+                                );
+                                const noneSelected = categorySubcategories.every(
+                                  s => !newSubcategories.includes(s)
+                                );
+
+                                return {
+                                  categories: allSelected
+                                    ? [...new Set([...prev.categories, category.name])]
+                                    : noneSelected
+                                      ? prev.categories.filter(c => c !== category.name)
+                                      : prev.categories,
+                                  subcategories: newSubcategories
+                                };
+                              });
+                              setPage(1);
+                            }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <span className="ml-2 text-sm">{subcategory}</span>
@@ -319,7 +305,7 @@ export default function TaskListingPage() {
       {selectedTask && (
         <TaskModal
           task={selectedTask}
-          isWorkerView={false}
+          isWorkerView={true}
           onClose={() => setSelectedTask(null)}
         />
       )}

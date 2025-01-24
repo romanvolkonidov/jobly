@@ -6,6 +6,8 @@ import { Badge } from '@/src/components/ui/badge';
 import TaskResponseModal from '../common/modals/TaskResponseModal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { Building } from 'lucide-react';
+import Image from 'next/image';
 
 interface TaskModalProps {
   task: Task;
@@ -46,12 +48,56 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
       setShowResponseModal(false);
       onClose();
       toast.success('Proposal submitted successfully');
-      router.refresh(); // Refresh the page data
-      router.push('/messages'); // Redirect to messages
+      router.refresh();
+      router.push('/messages');
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast.error('Failed to submit proposal');
     }
+  };
+
+  const renderPoster = () => {
+    if (task.postedAs === 'company' && task.company) {
+      return (
+        <div className="flex items-center gap-2">
+          {task.company.logo ? (
+            <Image 
+              src={task.company.logo} 
+              alt={task.company.name}
+              width={32}
+              height={32}
+              className="rounded-full object-cover"
+            />
+          ) : (
+            <Building className="w-8 h-8 text-gray-400" />
+          )}
+          <span className="text-gray-700 font-medium">{task.company.name}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        {task.createdBy?.imageUrl ? (
+          <Image 
+            src={task.createdBy.imageUrl} 
+            alt={task.createdBy.firstName}
+            width={32}
+            height={32}
+            className="rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-600">
+              {task.createdBy?.firstName?.charAt(0)}
+            </span>
+          </div>
+        )}
+        <span className="text-gray-700 font-medium">
+          {task.createdBy?.firstName}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -60,12 +106,17 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
             <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold">{task.title}</h2>
-                <Badge variant={task.status === 'open' ? 'default' : 'secondary'}>
-                  {task.status}
-                </Badge>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-semibold">{task.title}</h2>
+                  <Badge variant={task.status === 'open' ? 'default' : 'secondary'}>
+                    {task.status}
+                  </Badge>
+                </div>
+                
+                {renderPoster()}
               </div>
+              
               <button
                 onClick={onClose}
                 className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-50"
@@ -94,7 +145,6 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
                 <span className="font-medium capitalize">{task.status}</span>
               </div>
 
-                          {/* Only show Submit Proposal button for workers when they haven't bid yet */}
               {isWorkerView && task.bids.length === 0 && (
                 <div className="pt-6 border-t">
                   <button
@@ -106,7 +156,6 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
                 </div>
               )}
 
-              {/* Only show bids section for workers viewing their own bids */}
               {isWorkerView && task.bids.length > 0 && task.bids.map((bid) => (
                 <div key={bid.id} className="border-t pt-4">
                   <h3 className="font-medium mb-2">Your Proposal</h3>

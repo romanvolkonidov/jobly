@@ -1,11 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface User {
+  name: string;
+  email: string;
+}
+
 export default function CreateVacancyPage() {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [hasCompanyProfile, setHasCompanyProfile] = useState(false);
   const [formData, setFormData] = useState({
+    postedAs: 'individual' as 'individual' | 'company',
+    companyId: null as string | null,
     title: '',
     employmentType: '',
     location: '',
@@ -30,6 +45,32 @@ export default function CreateVacancyPage() {
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user data
+        const userResponse = await fetch('/api/user');
+        const userData = await userResponse.json();
+        setUserData(userData);
+
+        // Fetch companies
+        const companiesResponse = await fetch('/api/companies');
+        const companiesData = await companiesResponse.json();
+        
+        if (Array.isArray(companiesData) && companiesData.length > 0) {
+          setCompanies(companiesData);
+          setHasCompanyProfile(true);
+        } else {
+          setFormData(prev => ({ ...prev, postedAs: 'individual' }));
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setFormData(prev => ({ ...prev, postedAs: 'individual' }));
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleSubmit = async () => {
     try {
@@ -58,6 +99,60 @@ export default function CreateVacancyPage() {
           <section>
             <h2 className="text-xl font-medium mb-4">Basic Details</h2>
             <div className="space-y-4">
+              {hasCompanyProfile ? (
+                <>
+                  <div className="flex gap-4 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, postedAs: 'individual' })}
+                      className={`flex-1 p-3 rounded-lg border ${
+                        formData.postedAs === 'individual' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>Post as Individual</span>
+                        <span className="text-sm text-gray-600">
+                          {userData?.name || 'Loading...'}
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, postedAs: 'company', companyId: companies[0]?.id || null })}
+                      className={`flex-1 p-3 rounded-lg border ${
+                        formData.postedAs === 'company' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>Post as Company</span>
+                        <span className="text-sm text-gray-600">
+                          {companies[0]?.name || 'Loading...'}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {formData.postedAs === 'company' && companies.length > 1 && (
+                    <select
+                      value={formData.companyId || ''}
+                      onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                      className="w-full p-3 border rounded"
+                      required
+                    >
+                      {companies.map(company => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </>
+              ) : null}
+
               <input
                 type="text"
                 placeholder="Job Title"

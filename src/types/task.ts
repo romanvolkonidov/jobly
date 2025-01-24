@@ -4,20 +4,34 @@ import { Dispatch, SetStateAction } from 'react';
 // src/types/task.ts
 export interface Task {
   id: string;
-  applicationDeadline?: string | Date;
-
   title: string;
   description: string;
   budget: number | null;
   status: string;
   createdAt: string;
+  type: string;
   bids: Bid[];
-  type: string;  // Added this field
+  postedAs: 'individual' | 'company';
+  companyId?: string; // Add this field
+  createdBy: {
+    firstName: string;
+    lastName: string;
+    imageUrl?: string;
+    rating?: number;
+    reviewCount?: number;
+  };
+  company?: {
+    id: string;
+    name: string;
+    logo?: string;
+  } | null;
+  // Vacancy specific fields
   salaryMin?: number | null;
   salaryMax?: number | null;
   employmentType?: string;
   isRemote?: boolean;
   location?: string;
+  applicationDeadline?: string | Date;
   responsibilities?: string;
   qualifications?: string;
   benefits?: string;
@@ -25,12 +39,6 @@ export interface Task {
     cv: boolean;
     coverLetter: boolean;
     certificates: boolean;
-  };
-  createdBy: {
-    firstName: string;
-    lastName: string;
-    rating?: number;
-    reviewCount?: number;
   };
 }
 

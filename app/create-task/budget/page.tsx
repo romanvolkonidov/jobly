@@ -11,6 +11,9 @@ export default function BudgetPage() {
   const [needsBusinessDoc, setNeedsBusinessDoc] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [postedAs, setPostedAs] = useState<'individual' | 'company'>('individual');
+  const [showPostedAsModal, setShowPostedAsModal] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -21,9 +24,23 @@ export default function BudgetPage() {
       return;
     }
 
+    const userResponse = await fetch(`/api/users/${session.user.id}`);
+    const userData = await userResponse.json();
+    const hasCompanyProfile = userData.companies && userData.companies.length > 0;
+
+    if (hasCompanyProfile) {
+      setCompanyId(userData.companies[0].id);
+      setShowPostedAsModal(true);
+      return;
+    }
+
+    await handleSubmit('individual');
+  };
+
+  const handleSubmit = async (postingType: 'individual' | 'company') => {
     try {
       setIsSubmitting(true);
-
+      
       if (!budget || Number(budget) <= 0) {
         toast.error('Please enter a valid budget');
         return;
@@ -38,30 +55,38 @@ export default function BudgetPage() {
 
       const parsedTaskData = JSON.parse(taskData);
       
+      console.log('Company ID when posting:', companyId); // Debug log
+
+      const taskPayload = {
+        ...parsedTaskData,
+        title: parsedTaskData.name,
+        budget: Number(budget),
+        needsBusinessDoc,
+        status: 'open',
+        postedAs: postingType,
+        companyId: postingType === 'company' ? companyId : null,
+        type: 'task'
+      };
+
+      console.log('Sending task payload:', taskPayload); // Debug log
+      
       const response = await fetch('/api/tasks/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...parsedTaskData,
-          budget: Number(budget),
-          needsBusinessDoc,
-          status: 'open'
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskPayload)
       });
 
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create task');
+        throw new Error(responseData.details || responseData.message || 'Failed to create task');
       }
 
-      await response.json();
       toast.success('Task created successfully!');
       router.push('/projects');
 
     } catch (err) {
-      console.error('Error saving task:', err);
+      console.error('Error details:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to create task. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -147,6 +172,34 @@ export default function BudgetPage() {
           onLogin={handleLogin}
           onSignup={handleSignup}
         />
+
+        {showPostedAsModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4">How would you like to post this task?</h2>
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    setShowPostedAsModal(false);
+                    handleSubmit('individual');
+                  }}
+                  className="w-full bg-white border border-gray-300 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Post as Individual
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPostedAsModal(false);
+                    handleSubmit('company');
+                  }}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Post as Company
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

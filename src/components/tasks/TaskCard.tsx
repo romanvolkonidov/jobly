@@ -1,36 +1,10 @@
 // components/tasks/TaskCard.tsx
 import { Archive, Clock, MapPin, Building, Briefcase } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { Dispatch, SetStateAction } from 'react';
 import { Badge } from '@/src/components/ui/badge';
-
-interface Bid {
-  id: string;
-  amount: number;
-  proposal: string;
-  status: string;
-  createdAt: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  budget: number | null;
-  status: string;
-  createdAt: string;
-  bids: Bid[];
-  type: string;
-  salaryMin?: number | null;
-  salaryMax?: number | null;
-  employmentType?: string;
-  isRemote?: boolean;
-  location?: string;
-  createdBy: {
-    firstName: string;
-    lastName: string;
-  };
-}
+import { Task } from '@/src/types/task';
 
 interface TaskCardProps {
   task: Task;
@@ -76,6 +50,58 @@ export const TaskCard = ({
     }
   };
 
+  const renderPoster = () => {
+    console.log('Task data:', {
+      id: task.id,
+      postedAs: task.postedAs,
+      company: task.company
+    });
+
+    if (task.postedAs === 'company' && task.company) {
+      return (
+        <div className="flex items-center gap-2">
+          {task.company.logo ? (
+            <Image 
+              src={task.company.logo} 
+              alt={task.company.name}
+              width={24}
+              height={24}
+              className="rounded-full object-cover"
+            />
+          ) : (
+            <Building className="w-6 h-6 text-gray-400" />
+          )}
+          <span className="text-sm font-medium text-gray-700">
+            {task.company.name}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        {task.createdBy?.imageUrl ? (
+          <Image 
+            src={task.createdBy.imageUrl} 
+            alt={task.createdBy.firstName}
+            width={24}
+            height={24}
+            className="rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-xs text-gray-500">
+              {task.createdBy?.firstName?.charAt(0)}
+            </span>
+          </div>
+        )}
+        <span className="text-sm font-medium text-gray-700">
+          {task.createdBy?.firstName}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 relative hover:shadow-md transition-shadow border border-gray-100">
       <div className="flex justify-between items-start">
@@ -86,6 +112,7 @@ export const TaskCard = ({
               {task.status}
             </Badge>
           </div>
+          {renderPoster()}
           
           <p className="text-gray-600 mb-4 line-clamp-2">{task.description}</p>
           

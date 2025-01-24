@@ -1,9 +1,8 @@
-
 // app/api/companies/route.ts
 import { NextResponse } from 'next/server';
-import { getServerSession } from "next-auth";
+import { getServerSession } from 'next-auth';
 import { prisma } from '@/src/lib/prisma';
-import { authOptions } from "@/app/api/auth/auth-options";
+import { authOptions } from '@/app/api/auth/auth-options';
 
 export async function POST(req: Request) {
   try {
@@ -55,23 +54,34 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     const companies = await prisma.company.findMany({
       where: {
         userId: session.user.id
+      },
+      select: {
+        id: true,
+        name: true,
       }
     });
 
     return NextResponse.json(companies);
   } catch (error) {
-    console.error('[COMPANIES_GET]', error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('Error fetching companies:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch companies' },
+      { status: 500 }
+    );
   }
 }
 
