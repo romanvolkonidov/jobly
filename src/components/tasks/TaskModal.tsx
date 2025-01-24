@@ -94,23 +94,27 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
                 <span className="font-medium capitalize">{task.status}</span>
               </div>
 
-              <div className="pt-6 border-t">
-                <button
-                  onClick={handleShowResponse}
-                  className="w-full bg-primary-blue text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-blue/90 transition-colors"
-                >
-                  Submit Proposal
-                </button>
-              </div>
+                          {/* Only show Submit Proposal button for workers when they haven't bid yet */}
+              {isWorkerView && task.bids.length === 0 && (
+                <div className="pt-6 border-t">
+                  <button
+                    onClick={handleShowResponse}
+                    className="w-full bg-primary-blue text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-blue/90 transition-colors"
+                  >
+                    Submit Proposal
+                  </button>
+                </div>
+              )}
 
-              {task.bids.map((bid) => (
+              {/* Only show bids section for workers viewing their own bids */}
+              {isWorkerView && task.bids.length > 0 && task.bids.map((bid) => (
                 <div key={bid.id} className="border-t pt-4">
                   <h3 className="font-medium mb-2">Your Proposal</h3>
                   <p className="text-gray-700 whitespace-pre-wrap">
                     {bid.proposal}
                   </p>
                   <div className="mt-3 text-green-600 font-medium">
-                    Your Bid: KES {bid.amount.toLocaleString()}
+                    Your Bid: KES {bid.amount?.toLocaleString() ?? 'Not specified'}
                   </div>
                 </div>
               ))}
