@@ -12,7 +12,6 @@ const PREFETCH_URLS = [
   '/api/companies',
   '/api/categories',
   '/api/profile/portfolio-image',
-  '/api/profile/languages',
   '/api/profile/location'
 ];
 

@@ -1,23 +1,18 @@
-import { Redis as UpstashRedis } from '@upstash/redis'
+import { Redis } from '@upstash/redis'
 
-interface CustomRedis extends UpstashRedis {
-  clearUserSession(userId: string): Promise<void>;
-}
-
-if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
-  throw new Error('Missing Redis environment variables')
-}
-
-const redis = new UpstashRedis({
-  url: process.env.UPSTASH_REDIS_URL,
-  token: process.env.UPSTASH_REDIS_TOKEN,
-}) as CustomRedis;
-
-redis.clearUserSession = async (userId: string) => {
-  const keys = await redis.keys(`*:${userId}*`);
-  if (keys.length) {
-    await Promise.all(keys.map(key => redis.del(key)));
+const getRedisClient = () => {
+  if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
+    throw new Error('Redis credentials not configured')
   }
-};
+  
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_URL,
+    token: process.env.UPSTASH_REDIS_TOKEN,
+    retry: {
+      retries: 3,
+      backoff: (retryCount) => Math.min(retryCount * 1000, 3000)
+    }
+  })
+}
 
-export default redis;
+export const redis = getRedisClient()

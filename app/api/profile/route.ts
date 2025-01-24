@@ -3,7 +3,29 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
 import { prisma } from '@/src/lib/prisma';
 import { authOptions } from "@/app/api/auth/auth-options";
+import { redis } from '@/src/lib/redis'
 
+declare module 'next-auth' {
+  interface User {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    image?: string;
+  }
+}
+
+async function testRedis() {
+  try {
+    await redis.set('test', 'value');
+    const value = await redis.get('test');
+    console.log('Redis test:', value === 'value');
+  } catch (error) {
+    console.error('Redis error:', error);
+  }
+}
+
+testRedis();
 export async function GET() {
  try {
    const session = await getServerSession(authOptions);

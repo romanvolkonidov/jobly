@@ -87,8 +87,9 @@ const ViewResume: React.FC<ViewResumeProps> = ({ userId, onEdit }) => {
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/resumes/user/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch');
         const resume = await response.json();
-        setData(resume);  // Set data regardless of content
+        setData(resume);
       } catch (error) {
         console.error('Error loading resume:', error);
         setData(null);
@@ -96,13 +97,19 @@ const ViewResume: React.FC<ViewResumeProps> = ({ userId, onEdit }) => {
         setIsLoading(false);
       }
     };
-
-    if (userId) fetchData();
+  
+    // Only fetch if userId is provided and valid
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      fetchData();
+    } else {
+      setIsLoading(false); // Stop loading if no valid userId
+      setData(null);
+    }
   }, [userId]);
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
-  // Change the condition to check for title or other required fields if you don't want to use id
-  if (!data || !data.title) return (
+  // Change the condition to only check if data exists
+  if (!data) return (
     <div className="flex flex-col items-center justify-center h-64 space-y-4">
       <p className="text-gray-600">No resume data available.</p>
       {onEdit && <button

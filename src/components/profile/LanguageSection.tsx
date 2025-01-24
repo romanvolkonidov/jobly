@@ -14,6 +14,7 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(initialLanguages);
   const [isAddingLanguage, setIsAddingLanguage] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
+  const [lastFetch, setLastFetch] = useState(Date.now());
 
   const updateLanguages = useCallback(async (newLanguages: string[]) => {
     try {
@@ -38,12 +39,12 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
   }, []);
 
   useEffect(() => {
-    if (initialLanguages.length > 0) return;
+    if (initialLanguages.length > 0 || Date.now() - lastFetch < 5000) return;
     
     const controller = new AbortController();
-    
     const fetchLanguages = async () => {
       try {
+        setLastFetch(Date.now());
         const response = await fetch('/api/profile/languages', {
           signal: controller.signal
         });
@@ -51,7 +52,7 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
         if (data.languages) {
           setSelectedLanguages(data.languages);
         }
-      } catch (error: unknown) {
+      } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return;
         toast.error('Failed to load languages');
       }
@@ -59,7 +60,7 @@ const LanguageSection = ({ initialLanguages = [] }: Props) => {
 
     fetchLanguages();
     return () => controller.abort();
-  }, [initialLanguages]);
+  }, [initialLanguages, lastFetch]);
 
   const handleLanguageSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

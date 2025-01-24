@@ -119,9 +119,7 @@ export default function ResumeForm({ onCancel }: ResumeFormProps) {
   }, []);
 
   const addItem = useCallback((type: 'education' | 'experience' | 'certification') => {
-    const baseItem = {
-      id: Date.now().toString(),
-    };
+    const baseItem = { id: Date.now().toString() };
 
     let newItem: Education | Experience | Certification;
     switch (type) {
@@ -139,24 +137,22 @@ export default function ResumeForm({ onCancel }: ResumeFormProps) {
           ...prev,
           education: [...prev.education, newItem as Education]
         }));
-        break;
-        case 'experience':
-          newItem = {
-            ...baseItem,
-            title: '',
-            company: '',
-            location: '', 
-            startDate: '',
-            endDate: '',
-            current: false,
-            description: ''
-          } as Experience;
           break;
-        setFormData(prev => ({
-          ...prev,
-          experience: [...prev.experience, newItem as Experience]
-        }));
-        break;
+        case 'experience':
+          setFormData(prev => ({
+              ...prev,
+              experience: [...prev.experience, {
+                ...baseItem,
+                title: '',
+                company: '',
+                location: '', 
+                startDate: '',
+                endDate: '',
+                current: false,
+                description: ''
+              } as Experience]
+            }));
+            break;
       case 'certification':
         newItem = {
           ...baseItem,

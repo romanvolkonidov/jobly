@@ -47,9 +47,10 @@ const ViewCompanyComponent: React.FC<ViewCompanyProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!userId) return;
+   
     const fetchProfile = async () => {
       try {
-        // Updated to fetch the profile of the viewed user
         const response = await fetch(`/api/profile/${userId}`);
         if (response.ok) {
           setProfile(await response.json());
@@ -58,16 +59,19 @@ const ViewCompanyComponent: React.FC<ViewCompanyProps> = ({
         console.error('Error loading profile:', error);
       }
     };
-
+   
     fetchProfile();
-  }, [userId]);
-
-  useEffect(() => {
+   }, [userId]);
+   
+   useEffect(() => {
+    if (!userId) return;
+   
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/companies/user/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch company');
         const company = await response.json();
-        setData(company);  // Set data regardless of content
+        setData(company);
       } catch (error) {
         console.error('Error loading company:', error);
         setData(null);
@@ -75,14 +79,14 @@ const ViewCompanyComponent: React.FC<ViewCompanyProps> = ({
         setIsLoading(false);
       }
     };
-
+   
     if (!initialData) {
       fetchData();
     } else {
       setData(initialData);
       setIsLoading(false);
     }
-  }, [initialData, userId]);
+   }, [initialData, userId]);
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
   if (!data?.id) return (  // Only check for id instead of name and description
