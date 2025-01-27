@@ -2,6 +2,15 @@ import { Dispatch, SetStateAction } from 'react';
 
 
 // src/types/task.ts
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  imageUrl?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -9,17 +18,12 @@ export interface Task {
   budget: number | null;
   status: string;
   createdAt: string;
+  updatedAt: string; // Add this field
   type: string;
   bids: Bid[];
   postedAs: 'individual' | 'company';
   companyId?: string; // Add this field
-  createdBy: {
-    firstName: string;
-    lastName: string;
-    imageUrl?: string;
-    rating?: number;
-    reviewCount?: number;
-  };
+  createdBy: User;
   company?: {
     id: string;
     name: string;

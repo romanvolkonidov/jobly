@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { TaskCard } from '@/src/components/tasks/TaskCard';
 import { TaskModal } from '@/src/components/tasks/TaskModal';
 import { Task } from '@/src/types/task';
+import { useSession } from 'next-auth/react';
 
 // src/types/task.ts
 export interface Bid {
@@ -21,6 +22,7 @@ interface TasksResponse {
 }
 
 export default function ProjectsPage() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<'client' | 'worker'>('client');
   const [viewType, setViewType] = useState<'current' | 'archived'>('current');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -33,7 +35,9 @@ export default function ProjectsPage() {
       const response = await fetch(`/api/tasks/user/${activeTab}?status=${viewType === 'current' ? 'open' : 'archived'}`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       return response.json() as Promise<TasksResponse>;
-    }
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 3000, // Consider data stale after 3 seconds
   });
 
   const archiveMutation = useMutation({
@@ -115,9 +119,95 @@ export default function ProjectsPage() {
     }
   });
 
+  const addTaskMutation = useMutation({
+    mutationFn: async (newTask: Partial<Task>) => {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask),
+      });
+      if (!response.ok) throw new Error('Failed to add task');
+      return response.json();
+    },
+    onMutate: async (newTask) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ 
+        queryKey: ['userTasks', activeTab, viewType] 
+      });
+
+      // Get current data
+      const previousData = queryClient.getQueryData(['userTasks', activeTab, viewType]) as TasksResponse;
+
+      // Create optimistic task
+      const optimisticTask = {
+        ...newTask,
+        id: 'temp-' + Date.now(), // Temporary ID
+        createdAt: new Date().toISOString(),
+        status: 'open',
+        bids: [],
+      };
+
+      // Update the cache with optimistic data
+      queryClient.setQueryData(['userTasks', activeTab, viewType], {
+        tasks: previousData ? [optimisticTask, ...previousData.tasks] : [optimisticTask]
+      });
+
+      return { previousData };
+    },
+    onError: (err, newTask, context) => {
+      // Revert on error
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          ['userTasks', activeTab, viewType],
+          context.previousData
+        );
+      }
+      toast.error('Failed to add task');
+    },
+    onSuccess: (data) => {
+      // Update the cache with the real data
+      queryClient.setQueryData(['userTasks', activeTab, viewType], (old: TasksResponse | undefined) => {
+        if (!old) return { tasks: [data] };
+        return {
+          tasks: [
+            data,
+            ...old.tasks.filter(task => task.id !== 'temp-' + Date.now())
+          ]
+        };
+      });
+      toast.success('Task added successfully');
+    }
+  });
+
   const handleArchive = (taskId: string) => {
     archiveMutation.mutate(taskId);
     setSelectedTask(null);
+  };
+
+  const handleAddTask = () => {
+    if (!session?.user) {
+      toast.error('You must be logged in to create a task');
+      return;
+    }
+
+    const newTask: Partial<Task> = {
+      title: 'New Task Title',
+      description: 'New Task Description',
+      budget: 1000,
+      type: 'task',
+      status: 'open',
+      postedAs: 'individual',
+      createdBy: {
+        id: session.user.id,
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
+        imageUrl: session.user.image || undefined
+      },
+      company: null,
+      bids: [],
+    };
+
+    addTaskMutation.mutate(newTask);
   };
 
   if (error) {
@@ -216,6 +306,7 @@ export default function ProjectsPage() {
           onArchive={handleArchive}
         />
       )}
+
     </div>
   );
 }

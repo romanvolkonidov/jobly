@@ -32,3 +32,19 @@ export async function GET(request: Request) {
     }
   });
 }
+
+export async function POST(request: Request) {
+  try {
+    const newTask = await request.json();
+    const createdTask = await prisma.task.create({
+      data: newTask,
+    });
+    return NextResponse.json(createdTask);
+  } catch (error) {
+    console.error('Add task error:', error);
+    return NextResponse.json(
+      { message: 'Failed to add task' },
+      { status: 500 }
+    );
+  }
+}
