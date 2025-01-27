@@ -1,4 +1,4 @@
-// app/api/tasks/user/route.ts
+// app/api/tasks/user/[type]/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getServerSession } from "next-auth";

@@ -9,14 +9,16 @@ import { Task } from '@/src/types/task';
 interface TaskCardProps {
   task: Task;
   isClientView: boolean;
-  onClick: Dispatch<SetStateAction<Task | null>>;
-  onDelete?: (taskId: string) => Promise<void>;
+  onClick: (task: Task) => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
 }
 
 export const TaskCard = ({
   task,
   isClientView,
   onClick,
+  onArchive,
   onDelete,
 }: TaskCardProps) => {
   const renderPrice = () => {
@@ -32,22 +34,6 @@ export const TaskCard = ({
     }
     
     return task.budget ? `KES ${task.budget.toLocaleString()}` : 'Budget Negotiable';
-  };
-
-  const archiveTask = async () => {
-    try {
-      const response = await fetch(`/api/tasks/archive`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: task.id })
-      });
-      
-      if (!response.ok) throw new Error('Failed to archive task');
-      window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to archive task');
-    }
   };
 
   const renderPoster = () => {
@@ -149,7 +135,7 @@ export const TaskCard = ({
           </div>
           {isClientView && task.status !== 'archived' && (
             <button
-              onClick={archiveTask}
+              onClick={onArchive}
               className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-50"
             >
               <Archive size={18} />

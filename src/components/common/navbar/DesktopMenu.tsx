@@ -68,7 +68,7 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
         }}
       >
         <button className="text-base font-medium text-gray-700 hover:text-orange-600 transition-all duration-200 flex items-center space-x-1 py-2">
-          Create a Task
+          Post a Task
         </button>
         {isMenuOpen && (
           <div className="absolute top-full left-0 bg-white shadow-md rounded-md w-64 mt-0 z-10 animate-fadeIn">
@@ -123,11 +123,19 @@ function DesktopMenu({ isLoggedIn, isLoading = false }: DesktopMenuProps) {
           </div>
         )}
       </div>
+
+      <Link 
+        href="/create-job"
+        className="text-base font-medium text-gray-700 hover:text-orange-600 transition-all duration-200 flex items-center space-x-1 py-2"
+      >
+        Post a Vacancy
+      </Link>
+
       <Link 
         href="/tasks" 
         className="text-lg text-gray-700 hover:text-gray-900 transition-colors duration-200"
       >
-        Find Tasks
+        Find Work
       </Link>
       
       {isLoggedIn && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { TaskCard } from '@/src/components/tasks/TaskCard';
 import { TaskModal } from '@/src/components/tasks/TaskModal';
@@ -25,6 +25,8 @@ export default function ProjectsPage() {
   const [viewType, setViewType] = useState<'current' | 'archived'>('current');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
+  const queryClient = useQueryClient();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['userTasks', activeTab, viewType],
     queryFn: async () => {
@@ -33,6 +35,90 @@ export default function ProjectsPage() {
       return response.json() as Promise<TasksResponse>;
     }
   });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      try {
+        const response = await fetch(`/api/tasks/${taskId}/archive`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ taskId })
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('API endpoint not found');
+        }
+
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error('Invalid server response format');
+        }
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to archive task');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Archive error:', error);
+        throw error;
+      }
+    },
+    onMutate: async (taskId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['userTasks'] });
+
+      // Get snapshots of both current and archived tasks
+      const previousCurrent = queryClient.getQueryData(['userTasks', activeTab, 'current']) as TasksResponse;
+      const previousArchived = queryClient.getQueryData(['userTasks', activeTab, 'archived']) as TasksResponse;
+
+      // Find the task to be archived
+      const taskToArchive = previousCurrent?.tasks?.find(task => task.id === taskId);
+      
+      if (taskToArchive) {
+        // Update current tasks - remove the archived task
+        queryClient.setQueryData(['userTasks', activeTab, 'current'], {
+          tasks: previousCurrent.tasks.filter(task => task.id !== taskId)
+        });
+
+        // Update archived tasks - add the archived task
+        const archivedTasks = previousArchived?.tasks || [];
+        queryClient.setQueryData(['userTasks', activeTab, 'archived'], {
+          tasks: [...archivedTasks, { ...taskToArchive, status: 'archived' }]
+        });
+      }
+
+      return { previousCurrent, previousArchived };
+    },
+    onError: (err, taskId, context) => {
+      // Restore both lists to their previous state
+      if (context?.previousCurrent) {
+        queryClient.setQueryData(['userTasks', activeTab, 'current'], context.previousCurrent);
+      }
+      if (context?.previousArchived) {
+        queryClient.setQueryData(['userTasks', activeTab, 'archived'], context.previousArchived);
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to archive task. Please try again.');
+    },
+    onSuccess: (data) => {
+      toast.success('Task archived successfully');
+      // Invalidate both current and archived queries to ensure consistency
+      queryClient.invalidateQueries({ 
+        queryKey: ['userTasks', activeTab] 
+      });
+    }
+  });
+
+  const handleArchive = (taskId: string) => {
+    archiveMutation.mutate(taskId);
+    setSelectedTask(null);
+  };
 
   if (error) {
     toast.error(error instanceof Error ? error.message : 'Failed to load tasks');
@@ -105,6 +191,7 @@ export default function ProjectsPage() {
                 task={task}
                 isClientView={activeTab === 'client'}
                 onClick={() => setSelectedTask(task)}
+                onArchive={() => handleArchive(task.id)}
               />
             ))}
             {(!data?.tasks || data.tasks.length === 0) && (
@@ -126,6 +213,7 @@ export default function ProjectsPage() {
           task={selectedTask}
           isWorkerView={activeTab === 'worker'}
           onClose={() => setSelectedTask(null)}
+          onArchive={handleArchive}
         />
       )}
     </div>

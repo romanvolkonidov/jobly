@@ -70,6 +70,7 @@ datasource db {
     description String
     budget      Float?
     status      String    @default("open")
+    archivedAt  DateTime?
     location    String?
     userId      String
     createdAt   DateTime  @default(now())

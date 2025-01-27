@@ -1,21 +1,26 @@
 import { useState } from 'react';
 import { Task } from '@/src/types/task';
 import { VacancyModal } from './VacancyModal';
-import { X } from 'lucide-react';
+import { X, Archive, Building } from 'lucide-react'; // Add Archive to imports
 import { Badge } from '@/src/components/ui/badge';
 import TaskResponseModal from '../common/modals/TaskResponseModal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { Building } from 'lucide-react';
 import Image from 'next/image';
 
 interface TaskModalProps {
   task: Task;
   isWorkerView: boolean;
   onClose: () => void;
+  onArchive?: (taskId: string) => void; // Add this line
 }
 
-export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
+export const TaskModal: React.FC<TaskModalProps> = ({
+  task,
+  isWorkerView,
+  onClose,
+  onArchive,
+}) => {
   const router = useRouter();
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [showMainModal, setShowMainModal] = useState(true);
@@ -168,6 +173,15 @@ export const TaskModal = ({ task, isWorkerView, onClose }: TaskModalProps) => {
                 </div>
               ))}
             </div>
+            {!isWorkerView && task.status !== 'archived' && (
+              <button
+                onClick={() => onArchive?.(task.id)}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <Archive className="w-5 h-5" />
+                Archive
+              </button>
+            )}
           </div>
         </div>
       )}
